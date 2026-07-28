@@ -71,7 +71,7 @@ export interface Farm {
   growthStage: GrowthStage;
   irrigationMethod: IrrigationMethod;
   soilType: SoilType;
-  boundaryCoordinates: [number, number][];
+  boundaryCoordinates?: [number, number][];
   riskScore: number; // 0 - 100
   cropHealthScore: number; // 0 - 100
   livestockHealthScore?: number; // 0 - 100

@@ -10,6 +10,7 @@ import {
 } from '../types';
 import {
   INITIAL_USER,
+  INITIAL_USERS,
   INITIAL_FARMS,
   INITIAL_RECOMMENDATIONS,
   INITIAL_REPORTS,
@@ -368,5 +369,56 @@ export async function addNotificationToDb(notif: AlertNotification): Promise<voi
     });
   } catch (e) {
     console.error('Error adding notification to Supabase:', e);
+  }
+}
+
+// User Profile Operations for Admin and Auth
+export async function getProfilesFromDb(): Promise<UserProfile[]> {
+  if (!isSupabaseConfigured()) return INITIAL_USERS;
+  try {
+    const { data, error } = await supabase.from('profiles').select('*');
+    if (error || !data || data.length === 0) return INITIAL_USERS;
+    return data.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone || '0143791311',
+      role: row.role || 'farmer',
+      country: row.country || 'Kenya',
+      county: row.county || 'Uasin Gishu',
+      organization: row.organization,
+      primaryFocus: row.primary_focus || 'Mixed Agribusiness',
+    }));
+  } catch (e) {
+    console.error('Error fetching profiles from Supabase:', e);
+    return INITIAL_USERS;
+  }
+}
+
+export async function saveProfileToDb(user: UserProfile): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await supabase.from('profiles').upsert({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      country: user.country,
+      county: user.county,
+      organization: user.organization,
+      primary_focus: user.primaryFocus,
+    });
+  } catch (e) {
+    console.error('Error saving profile to Supabase:', e);
+  }
+}
+
+export async function deleteProfileFromDb(id: string): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await supabase.from('profiles').delete().eq('id', id);
+  } catch (e) {
+    console.error('Error deleting profile from Supabase:', e);
   }
 }

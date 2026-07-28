@@ -10,16 +10,53 @@ import {
 } from '../types';
 
 export const INITIAL_USER: UserProfile = {
-  id: 'usr-001',
-  name: 'Samuel Kiprop',
-  email: 'samuel.kiprop@agrishield.org',
-  phone: '+254 712 345 678',
-  role: 'farmer',
+  id: 'usr-admin-ian',
+  name: 'Ian Kipkoech Chirchir',
+  email: 'iankipkoechchirchir06@gmail.com',
+  phone: '0143791311',
+  role: 'admin',
   country: 'Kenya',
   county: 'Uasin Gishu',
-  organization: 'Eldoret Dairy & Crop Co-operative',
+  organization: 'AgriShield AI Developer & Administration',
   primaryFocus: 'Mixed Agribusiness',
 };
+
+export const INITIAL_USERS: UserProfile[] = [
+  INITIAL_USER,
+  {
+    id: 'usr-farmer-001',
+    name: 'Samuel Kiprop',
+    email: 'samuel.kiprop@agrishield.org',
+    phone: '+254 712 345 678',
+    role: 'farmer',
+    country: 'Kenya',
+    county: 'Uasin Gishu',
+    organization: 'Eldoret Dairy & Crop Co-operative',
+    primaryFocus: 'Mixed Agribusiness',
+  },
+  {
+    id: 'usr-officer-002',
+    name: 'Dr. Jane Chebet',
+    email: 'jane.chebet@agri.go.ke',
+    phone: '+254 722 987 654',
+    role: 'extension_officer',
+    country: 'Kenya',
+    county: 'Nakuru',
+    organization: 'Ministry of Agriculture Extension Dept',
+    primaryFocus: 'Crops',
+  },
+  {
+    id: 'usr-researcher-003',
+    name: 'Prof. David Omondi',
+    email: 'david.omondi@kalro.org',
+    phone: '+254 733 112 233',
+    role: 'ngo',
+    country: 'Kenya',
+    county: 'Uasin Gishu',
+    organization: 'KALRO Climate Research Center',
+    primaryFocus: 'Livestock',
+  },
+];
 
 export const INITIAL_FARMS: Farm[] = [
   {

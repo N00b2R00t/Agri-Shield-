@@ -12,6 +12,7 @@ import {
 } from './types';
 import {
   INITIAL_USER,
+  INITIAL_USERS,
   INITIAL_FARMS,
   INITIAL_WEATHER,
   INITIAL_RECOMMENDATIONS,
@@ -34,6 +35,9 @@ import {
   getMarketPricesFromDb,
   getNotificationsFromDb,
   addNotificationToDb,
+  getProfilesFromDb,
+  saveProfileToDb,
+  deleteProfileFromDb,
 } from './lib/dbService';
 
 // UI Components
@@ -51,6 +55,11 @@ import { MarketIntelligence } from './components/MarketIntelligence';
 import { AdminExtensionDashboard } from './components/AdminExtensionDashboard';
 import { AIAssistantModal } from './components/AIAssistantModal';
 import { FarmerProfileModal } from './components/FarmerProfileModal';
+import { AuthModal } from './components/AuthModal';
+import { LiveBackgroundTelemetry } from './components/LiveBackgroundTelemetry';
+import { NewFarmModal } from './components/NewFarmModal';
+import { LivestockManagerModal } from './components/LivestockManagerModal';
+import { SettingsModal, ThemeMode } from './components/SettingsModal';
 
 import {
   LayoutDashboard,
@@ -67,6 +76,7 @@ import {
 
 export default function App() {
   const [user, setUser] = useState<UserProfile>(INITIAL_USER);
+  const [usersList, setUsersList] = useState<UserProfile[]>(INITIAL_USERS);
   const [farms, setFarms] = useState<Farm[]>(INITIAL_FARMS);
   const [activeFarm, setActiveFarm] = useState<Farm>(INITIAL_FARMS[0]);
 
@@ -83,7 +93,34 @@ export default function App() {
 
   const [showAssistant, setShowAssistant] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showNewFarmModal, setShowNewFarmModal] = useState(false);
+  const [showLivestockModal, setShowLivestockModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem('agrishield_theme');
+    return (saved as ThemeMode) || 'system';
+  });
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  // Apply Theme Effect
+  useEffect(() => {
+    localStorage.setItem('agrishield_theme', theme);
+    const root = document.documentElement;
+
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else if (theme === 'light') {
+      root.classList.remove('dark');
+    } else {
+      // System mode
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    }
+  }, [theme]);
 
   // Initialize and load data from Supabase
   useEffect(() => {
@@ -97,6 +134,7 @@ export default function App() {
         dbPreds,
         dbMarkets,
         dbNotifs,
+        dbUsers,
       ] = await Promise.all([
         getFarmsFromDb(),
         getReportsFromDb(),
@@ -104,6 +142,7 @@ export default function App() {
         getDiseasePredictionsFromDb(),
         getMarketPricesFromDb(),
         getNotificationsFromDb(),
+        getProfilesFromDb(),
       ]);
 
       if (dbFarms && dbFarms.length > 0) {
@@ -115,6 +154,7 @@ export default function App() {
       if (dbPreds && dbPreds.length > 0) setPredictions(dbPreds);
       if (dbMarkets && dbMarkets.length > 0) setMarkets(dbMarkets);
       if (dbNotifs && dbNotifs.length > 0) setNotifications(dbNotifs);
+      if (dbUsers && dbUsers.length > 0) setUsersList(dbUsers);
     }
 
     loadSupabaseData();
@@ -136,7 +176,75 @@ export default function App() {
     loadWeather();
   }, [activeFarm]);
 
-  // Handle role change
+  // User Management & Authentication Handlers
+  const handleLoginSuccess = async (loggedInUser: UserProfile) => {
+    setUser(loggedInUser);
+    
+    // Ensure user is in list
+    setUsersList((prev) => {
+      const exists = prev.some((u) => u.id === loggedInUser.id || u.email === loggedInUser.email);
+      if (!exists) return [loggedInUser, ...prev];
+      return prev.map((u) => (u.email === loggedInUser.email ? loggedInUser : u));
+    });
+
+    if (loggedInUser.role === 'admin' || loggedInUser.role === 'extension_officer') {
+      setActiveTab('admin');
+    }
+
+    await saveProfileToDb(loggedInUser);
+  };
+
+  const handleAddUser = async (newUser: UserProfile) => {
+    setUsersList((prev) => [newUser, ...prev]);
+    await saveProfileToDb(newUser);
+  };
+
+  const handleUpdateUserRole = async (id: string, newRole: UserRole) => {
+    let updatedUser: UserProfile | undefined;
+    setUsersList((prev) =>
+      prev.map((u) => {
+        if (u.id === id) {
+          updatedUser = { ...u, role: newRole };
+          return updatedUser;
+        }
+        return u;
+      })
+    );
+
+    if (updatedUser) {
+      await saveProfileToDb(updatedUser);
+      if (id === user.id) {
+        setUser(updatedUser);
+      }
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    setUsersList((prev) => prev.filter((u) => u.id !== id));
+    await deleteProfileFromDb(id);
+  };
+
+  const handleAddFarm = async (newFarm: Farm) => {
+    setFarms((prev) => [newFarm, ...prev]);
+    setActiveFarm(newFarm);
+    await saveFarmToDb(newFarm);
+  };
+
+  const handleSignOut = () => {
+    const guestUser: UserProfile = {
+      id: `usr-guest`,
+      name: 'Smallholder Farmer',
+      email: 'farmer@agrishield.ai',
+      phone: '0143791311',
+      role: 'farmer',
+      country: 'Kenya',
+      county: 'Uasin Gishu',
+      organization: 'Kenya National Farmers Federation',
+    };
+    setUser(guestUser);
+    setShowAuthModal(true);
+  };
+
   const handleChangeRole = (newRole: UserRole) => {
     setUser({ ...user, role: newRole });
     if (newRole === 'admin' || newRole === 'extension_officer') {
@@ -259,8 +367,11 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-stone-100 text-stone-900 font-sans flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+      <div className="min-h-screen bg-stone-100 text-stone-900 font-sans flex flex-col antialiased selection:bg-emerald-500 selection:text-white relative">
         
+        {/* Live Ambient Telemetry Particles & Satellite Radar Sync */}
+        <LiveBackgroundTelemetry />
+
         {/* Offline Banner when network disconnects */}
         <OfflinePage mode="banner" />
 
@@ -271,8 +382,12 @@ export default function App() {
         farms={farms}
         onSelectFarm={(f) => setActiveFarm(f)}
         onChangeRole={handleChangeRole}
-        onOpenNewFarmModal={() => setShowProfileModal(true)}
+        onOpenNewFarmModal={() => setShowNewFarmModal(true)}
+        onOpenLivestockModal={() => setShowLivestockModal(true)}
+        onOpenSettingsModal={() => setShowSettingsModal(true)}
         onOpenProfileModal={() => setShowProfileModal(true)}
+        onOpenAuthModal={() => setShowAuthModal(true)}
+        onSignOut={handleSignOut}
         notifications={notifications}
         onOpenAssistant={() => setShowAssistant(true)}
       />
@@ -373,11 +488,15 @@ export default function App() {
 
         {activeTab === 'admin' && (
           <AdminExtensionDashboard
-            role={user.role}
+            currentUser={user}
+            usersList={usersList}
             farms={farms}
             reports={reports}
             onVerifyReport={handleVerifyReport}
             onSendBroadcast={handleSendBroadcast}
+            onAddUser={handleAddUser}
+            onUpdateUserRole={handleUpdateUserRole}
+            onDeleteUser={handleDeleteUser}
           />
         )}
 
@@ -395,6 +514,12 @@ export default function App() {
       </button>
 
       {/* Modals */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
+
       <AIAssistantModal
         isOpen={showAssistant}
         onClose={() => setShowAssistant(false)}
@@ -409,6 +534,29 @@ export default function App() {
         user={user}
         activeFarm={activeFarm}
         onUpdateFarm={handleUpdateFarm}
+      />
+
+      <NewFarmModal
+        isOpen={showNewFarmModal}
+        onClose={() => setShowNewFarmModal(false)}
+        onAddFarm={handleAddFarm}
+        userCounty={user.county}
+      />
+
+      <LivestockManagerModal
+        isOpen={showLivestockModal}
+        onClose={() => setShowLivestockModal(false)}
+        activeFarm={activeFarm}
+        onUpdateFarm={handleUpdateFarm}
+      />
+
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        user={user}
+        onSignOut={handleSignOut}
+        theme={theme}
+        onThemeChange={setTheme}
       />
 
       {/* Footer */}

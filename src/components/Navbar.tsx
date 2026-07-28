@@ -23,6 +23,10 @@ interface NavbarProps {
   onChangeRole: (role: UserRole) => void;
   onOpenNewFarmModal: () => void;
   onOpenProfileModal: () => void;
+  onOpenAuthModal: () => void;
+  onOpenLivestockModal?: () => void;
+  onOpenSettingsModal?: () => void;
+  onSignOut?: () => void;
   notifications: AlertNotification[];
   onOpenAssistant: () => void;
 }
@@ -35,6 +39,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   onChangeRole,
   onOpenNewFarmModal,
   onOpenProfileModal,
+  onOpenAuthModal,
+  onOpenLivestockModal,
+  onOpenSettingsModal,
+  onSignOut,
   notifications,
   onOpenAssistant,
 }) => {
@@ -102,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     )}
                   </button>
                 ))}
-                <div className="border-t border-stone-800 mt-1 pt-1 px-2">
+                <div className="border-t border-stone-800 mt-1 pt-1 px-2 space-y-1">
                   <button
                     onClick={() => {
                       setShowFarmDropdown(false);
@@ -113,6 +121,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <Plus className="w-3.5 h-3.5" />
                     <span>Register New Farm Location</span>
                   </button>
+
+                  {onOpenLivestockModal && (
+                    <button
+                      onClick={() => {
+                        setShowFarmDropdown(false);
+                        onOpenLivestockModal();
+                      }}
+                      className="w-full text-left px-2 py-1.5 rounded-lg text-xs font-semibold text-amber-400 hover:bg-amber-950/40 flex items-center space-x-1.5 transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Manage Animals / Livestock Herd</span>
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -216,14 +237,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Profile Avatar */}
-            <button
-              onClick={onOpenProfileModal}
-              className="p-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors border border-stone-700"
-              title="Farmer Profile"
-            >
-              <User className="w-5 h-5 text-emerald-400" />
-            </button>
+            {/* Profile Avatar, Settings & Auth Switcher */}
+            <div className="flex items-center space-x-1.5">
+              <button
+                onClick={onOpenAuthModal}
+                className="px-2.5 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold border border-stone-700 flex items-center space-x-1.5 transition-colors"
+                title="Sign In or Switch Account"
+              >
+                <User className="w-4 h-4 text-emerald-400" />
+                <span className="hidden sm:inline max-w-[100px] truncate">{user.name.split(' ')[0]}</span>
+              </button>
+
+              <button
+                onClick={onOpenSettingsModal || onOpenProfileModal}
+                className="p-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors border border-stone-700"
+                title="System Settings & Themes"
+              >
+                <Settings className="w-4 h-4 text-stone-400" />
+              </button>
+            </div>
           </div>
 
         </div>

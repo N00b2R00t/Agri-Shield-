@@ -38,6 +38,8 @@ import {
 
 // UI Components
 import { Navbar } from './components/Navbar';
+import { ErrorBoundary } from './components/ErrorPage';
+import { OfflinePage } from './components/OfflinePage';
 import { RoleBanner } from './components/RoleBanner';
 import { DashboardOverview } from './components/DashboardOverview';
 import { InteractiveMap } from './components/InteractiveMap';
@@ -256,9 +258,13 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-stone-100 text-stone-900 font-sans flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
-      
-      {/* Navbar Header */}
+    <ErrorBoundary>
+      <div className="min-h-screen bg-stone-100 text-stone-900 font-sans flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+        
+        {/* Offline Banner when network disconnects */}
+        <OfflinePage mode="banner" />
+
+        {/* Navbar Header */}
       <Navbar
         user={user}
         activeFarm={activeFarm}
@@ -410,11 +416,12 @@ export default function App() {
         <div className="font-semibold text-stone-300">
           AgriShield AI — Intelligent Climate Risk & Farm Decision Support Platform
         </div>
-        <div className="text-[11px] text-stone-500">
-          Powered by Gemini 3.6 Flash & Open-Meteo Climate Datasets • Climate Tech Hackathon MVP
+        <div className="text-[11px] text-stone-400 font-medium">
+          Designed & Developed by <span className="text-emerald-400 font-bold">Ian Chirchir</span> • Powered by Gemini AI & Supabase
         </div>
       </footer>
 
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { AgriShieldLogoFull } from './AgriShieldLogo';
 import {
-  ShieldAlert,
   MapPin,
   Bell,
   User,
@@ -57,24 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between h-16">
           
           {/* Brand Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-900/40">
-              <ShieldAlert className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <span className="text-xl font-bold tracking-tight text-stone-50">
-                  Agri<span className="text-emerald-400">Shield</span>
-                </span>
-                <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">
-                  AI
-                </span>
-              </div>
-              <p className="text-[11px] text-stone-400 font-medium hidden sm:block">
-                Climate Risk Intelligence Engine
-              </p>
-            </div>
-          </div>
+          <AgriShieldLogoFull size={38} variant="dark" />
 
           {/* Farm Switcher Dropdown */}
           <div className="relative">

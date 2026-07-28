@@ -114,8 +114,9 @@ export const CommunityIntel: React.FC<CommunityIntelProps> = ({
             className="px-2.5 py-1 rounded-lg border border-stone-300 bg-stone-50 font-medium text-stone-800 focus:ring-1 focus:ring-emerald-500"
           >
             <option value="all">All Outbreak Types</option>
-            <option value="pest">Pests (Armyworm, Locusts)</option>
-            <option value="disease">Crop Disease (Blight, Rust)</option>
+            <option value="pest">Crop Pests (Armyworm, Locusts)</option>
+            <option value="disease">Plant Disease (Blight, Rust)</option>
+            <option value="livestock_disease">Livestock Vectors & Diseases (Ticks, Mastitis, ECF)</option>
             <option value="flood">Flood & Erosion</option>
             <option value="drought">Drought & Water Shortage</option>
           </select>
@@ -244,13 +245,13 @@ export const CommunityIntel: React.FC<CommunityIntelProps> = ({
                 <select
                   value={reportType}
                   onChange={(e) => setReportType(e.target.value as ReportType)}
-                  className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900"
+                  className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 font-semibold"
                 >
-                  <option value="pest">Pest Outbreak (Fall Armyworm, Locusts)</option>
-                  <option value="disease">Crop Disease (Late Blight, Rust, Streak Virus)</option>
+                  <option value="pest">Crop Pest Outbreak (Fall Armyworm, Locusts)</option>
+                  <option value="disease">Plant Disease (Late Blight, Maize Streak Virus)</option>
+                  <option value="livestock_disease">Livestock Vector / Disease (Ticks, East Coast Fever, Mastitis, Foot & Mouth)</option>
                   <option value="flood">Flash Flood / Soil Erosion</option>
                   <option value="drought">Severe Drought / Water Crisis</option>
-                  <option value="livestock">Livestock Illness / Forage Shortage</option>
                 </select>
               </div>
 

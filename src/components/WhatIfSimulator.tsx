@@ -118,19 +118,27 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({ farm }) => {
             </button>
           </div>
 
-          {/* Variable 1: Crop Selection */}
+          {/* Variable 1: Crop or Livestock Selection */}
           <div>
-            <label className="block text-stone-700 font-bold mb-1">Target Crop Selection</label>
+            <label className="block text-stone-700 font-bold mb-1">Target Agribusiness Enterprise</label>
             <select
               value={input.cropType}
               onChange={(e) => setInput({ ...input, cropType: e.target.value as CropType })}
               className="w-full p-2.5 rounded-xl border border-stone-300 bg-white font-semibold text-stone-900"
             >
-              <option value="Maize">Maize (Hybrid HB6210)</option>
-              <option value="Sorghum">Sorghum (Drought Resistant)</option>
-              <option value="Tomatoes">Tomatoes (F1 Variety)</option>
-              <option value="Beans">Beans (Rosecoco)</option>
-              <option value="Coffee">Coffee (Arabica)</option>
+              <optgroup label="Crops & Horticulture">
+                <option value="Maize">Maize (Hybrid HB6210)</option>
+                <option value="Sorghum">Sorghum (Drought Resistant)</option>
+                <option value="Tomatoes">Tomatoes (F1 Variety)</option>
+                <option value="Beans">Beans (Rosecoco)</option>
+                <option value="Coffee">Coffee (Arabica)</option>
+              </optgroup>
+              <optgroup label="Livestock & Forage">
+                <option value="Napier Grass">Napier Grass (Fodder Silage)</option>
+                <option value="Dairy Cattle">Dairy Cattle (Milk Yield Optimization)</option>
+                <option value="Dairy Goats">Dairy Goats (Galla / Toggenburg)</option>
+                <option value="Poultry Layers">Poultry Layers (Kienyeji Hybrid)</option>
+              </optgroup>
             </select>
           </div>
 

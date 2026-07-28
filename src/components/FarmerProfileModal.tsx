@@ -18,7 +18,10 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
   onUpdateFarm,
 }) => {
   const [farmName, setFarmName] = useState(activeFarm.name);
+  const [category, setCategory] = useState<'crop' | 'livestock' | 'mixed'>(activeFarm.category || 'mixed');
   const [cropType, setCropType] = useState<CropType>(activeFarm.cropType);
+  const [livestockType, setLivestockType] = useState<string>(activeFarm.livestockType || 'Dairy Cattle');
+  const [headCount, setHeadCount] = useState<number>(activeFarm.headCount || 12);
   const [growthStage, setGrowthStage] = useState<GrowthStage>(activeFarm.growthStage);
   const [areaHectares, setAreaHectares] = useState(activeFarm.areaHectares);
   const [soilType, setSoilType] = useState<SoilType>(activeFarm.soilType);
@@ -31,7 +34,10 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
     e.preventDefault();
     onUpdateFarm({
       name: farmName,
+      category,
       cropType,
+      livestockType,
+      headCount,
       growthStage,
       areaHectares,
       soilType,
@@ -71,20 +77,34 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
             <span>Active Farm Configuration: {activeFarm.id}</span>
           </div>
 
-          <div>
-            <label className="block text-stone-700 font-bold mb-1">Farm Name</label>
-            <input
-              type="text"
-              value={farmName}
-              onChange={(e) => setFarmName(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 font-bold"
-              required
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-stone-700 font-bold mb-1">Farm Name</label>
+              <input
+                type="text"
+                value={farmName}
+                onChange={(e) => setFarmName(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 font-bold"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-stone-700 font-bold mb-1">Enterprise Type</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as any)}
+                className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 font-semibold"
+              >
+                <option value="mixed">Mixed Crops & Livestock</option>
+                <option value="crop">Crop Agriculture Only</option>
+                <option value="livestock">Animal Keeping Only</option>
+              </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-stone-700 font-bold mb-1">Crop Variety</label>
+              <label className="block text-stone-700 font-bold mb-1">Primary Crop</label>
               <select
                 value={cropType}
                 onChange={(e) => setCropType(e.target.value as CropType)}
@@ -95,11 +115,39 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
                 <option value="Tomatoes">Tomatoes</option>
                 <option value="Beans">Beans</option>
                 <option value="Coffee">Coffee</option>
+                <option value="Napier Grass">Napier Grass (Fodder)</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-stone-700 font-bold mb-1">Growth Stage</label>
+              <label className="block text-stone-700 font-bold mb-1">Livestock Keeping</label>
+              <select
+                value={livestockType}
+                onChange={(e) => setLivestockType(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900"
+              >
+                <option value="Dairy Cattle">Dairy Cattle</option>
+                <option value="Dairy Goats / Sheep">Dairy Goats / Sheep</option>
+                <option value="Poultry Layers / Kienyeji">Poultry Layers / Kienyeji</option>
+                <option value="Apiculture / Bees">Apiculture / Bees</option>
+                <option value="None">None</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-stone-700 font-bold mb-1">Livestock Head Count</label>
+              <input
+                type="number"
+                value={headCount}
+                onChange={(e) => setHeadCount(parseInt(e.target.value) || 0)}
+                className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 font-bold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-stone-700 font-bold mb-1">Growth / Production Stage</label>
               <select
                 value={growthStage}
                 onChange={(e) => setGrowthStage(e.target.value as GrowthStage)}
@@ -108,7 +156,7 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
                 <option value="Land Prep">Land Prep</option>
                 <option value="Vegetative / Early Growth">Vegetative / Early Growth</option>
                 <option value="Flowering / Tasseling">Flowering / Tasseling</option>
-                <option value="Maturation">Maturation</option>
+                <option value="Lactation / Production Cycle">Lactation / Production Cycle</option>
                 <option value="Ready to Harvest">Ready to Harvest</option>
               </select>
             </div>

@@ -44,6 +44,11 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
       case 'pest_control': return <Bug className="w-4 h-4 text-red-500" />;
       case 'fertilizer': return <TestTube className="w-4 h-4 text-amber-500" />;
       case 'crop_switch': return <Repeat className="w-4 h-4 text-teal-500" />;
+      case 'livestock_shelter': return <Zap className="w-4 h-4 text-amber-600" />;
+      case 'fodder_preservation': return <Sprout className="w-4 h-4 text-emerald-600" />;
+      case 'vaccination': return <TestTube className="w-4 h-4 text-red-600" />;
+      case 'pasture_rotation': return <Repeat className="w-4 h-4 text-blue-600" />;
+      case 'water_management': return <Droplets className="w-4 h-4 text-teal-600" />;
       default: return <Zap className="w-4 h-4 text-emerald-500" />;
     }
   };
@@ -97,7 +102,7 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
 
       {/* Filter Tabs */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-1 text-xs font-semibold">
-        {['all', 'pending', 'completed', 'planting', 'pest_control', 'irrigation', 'harvest'].map((t) => (
+        {['all', 'pending', 'completed', 'planting', 'pest_control', 'livestock_shelter', 'fodder_preservation', 'vaccination', 'irrigation', 'harvest'].map((t) => (
           <button
             key={t}
             onClick={() => setFilterType(t)}

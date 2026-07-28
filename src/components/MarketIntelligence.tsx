@@ -44,7 +44,7 @@ export const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({ markets 
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-stone-900 bg-stone-100 px-2.5 py-0.5 rounded-full">
-                  {mkt.cropName}
+                  {mkt.itemName || mkt.cropName}
                 </span>
                 <div
                   className={`flex items-center space-x-1 text-xs font-bold px-2 py-0.5 rounded-full ${
@@ -67,7 +67,10 @@ export const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({ markets 
 
               <div>
                 <div className="text-2xl font-black text-stone-900">
-                  ${mkt.pricePerKg} <span className="text-xs font-normal text-stone-500">/ kg</span>
+                  ${mkt.pricePerUnit || mkt.pricePerKg}{' '}
+                  <span className="text-xs font-normal text-stone-500">
+                    / {mkt.unit || 'kg'}
+                  </span>
                 </div>
                 <div className="text-xs font-bold text-stone-700 mt-0.5 flex items-center space-x-1">
                   <MapPin className="w-3 h-3 text-stone-400" />

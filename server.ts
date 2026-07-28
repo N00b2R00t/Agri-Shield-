@@ -125,6 +125,7 @@ async function startServer() {
       id: `farm-${Date.now()}`,
       userId: req.body.userId || 'usr-001',
       name: req.body.name || 'My New Farm',
+      category: req.body.category || 'mixed',
       locationName: req.body.locationName || 'Nakuru District',
       country: req.body.country || 'Kenya',
       county: req.body.county || 'Nakuru',
@@ -132,6 +133,8 @@ async function startServer() {
       lng: req.body.lng || 35.8643,
       areaHectares: req.body.areaHectares || 1.5,
       cropType: req.body.cropType || 'Maize',
+      livestockType: req.body.livestockType || 'Dairy Cattle',
+      headCount: req.body.headCount || 8,
       plantingDate: req.body.plantingDate || new Date().toISOString().split('T')[0],
       growthStage: req.body.growthStage || 'Vegetative / Early Growth',
       irrigationMethod: req.body.irrigationMethod || 'Rainfed',
@@ -144,6 +147,10 @@ async function startServer() {
       ],
       riskScore: Math.floor(Math.random() * 40) + 30,
       cropHealthScore: Math.floor(Math.random() * 20) + 75,
+      livestockHealthScore: 88,
+      thiIndex: 72,
+      waterRequirementLitersPerDay: 180,
+      forageAvailabilityPercent: 85,
     };
     farmsStore.push(newFarm);
     res.status(201).json(newFarm);
@@ -226,27 +233,30 @@ async function startServer() {
     const { farm, question, weather, recentReports, chatHistory } = req.body;
 
     const farmContext = farm
-      ? `Farm Name: ${farm.name}, Location: ${farm.locationName}, Crop: ${farm.cropType}, Growth Stage: ${farm.growthStage}, Soil: ${farm.soilType}, Irrigation: ${farm.irrigationMethod}, Size: ${farm.areaHectares} ha.`
-      : 'Default Smallholder Maize Farm in Nakuru, Kenya (2.5 ha).';
+      ? `Farm Name: ${farm.name}, Location: ${farm.locationName}, Category: ${farm.category || 'mixed'}, Crop: ${farm.cropType}, Livestock: ${farm.livestockType || 'None'} (Head Count: ${farm.headCount || 'N/A'}), Growth/Production Stage: ${farm.growthStage}, Soil/Pasture: ${farm.soilType}, Irrigation/Water: ${farm.irrigationMethod}, Size: ${farm.areaHectares} ha, THI Index: ${farm.thiIndex || 'Normal'}.`
+      : 'Default Mixed Agricultural & Livestock Shamba in Uasin Gishu / Nakuru, Kenya.';
 
     const weatherContext = weather
-      ? `Current Temp: ${weather.currentTemp}°C, Humidity: ${weather.humidity}%, Rainfall: ${weather.rainfallMm}mm (${weather.rainfallProb}% chance today), Soil Moisture: ${weather.soilMoisturePercent}%.`
-      : 'Heavy rain expected tomorrow (38mm, 85% prob), humidity 76%.';
+      ? `Current Temp: ${weather.currentTemp}°C, Humidity: ${weather.humidity}%, Rainfall: ${weather.rainfallMm}mm (${weather.rainfallProb}% chance today), Soil Moisture: ${weather.soilMoisturePercent}%, Livestock THI: ${weather.livestockThi || 72}.`
+      : 'Heavy rain expected tomorrow (38mm, 85% prob), humidity 78%, THI 74.5.';
 
     const reportsContext = recentReports && recentReports.length > 0
       ? recentReports.slice(0, 3).map((r: CommunityReport) => `- ${r.reportType} report on ${r.cropAffected} (${r.severity} severity, ${r.distanceKm}km away): ${r.description}`).join('\n')
-      : 'Nearby reports: Fall Armyworm larvae reported 2.1km away on Maize.';
+      : 'Nearby reports: East Coast Fever ticks reported 1.8km away; Fall Armyworm larvae reported 1.2km away.';
 
-    const systemInstruction = `You are AgriShield AI, a world-class tropical agronomist, climate resilience scientist, and extension advisor for smallholder farmers.
-You provide clear, practical, empathetic, and scientifically grounded advice tailored specifically to the farmer's location, crop stage, weather forecast, and nearby pest/disease reports.
+    const systemInstruction = `You are AgriShield AI, an expert climate resilience agronomist and veterinary extension officer for the Climate Tech for Resilient Communities Hackathon 2026 (EldoHub & Tech for Good).
+You advise smallholder farmers on BOTH Crop Agriculture (Maize, Sorghum, Horticulture, Napier grass) AND Animal Livestock Keeping (Dairy Cattle, Goats, Poultry, Apiculture).
+
+KEY ADVISORY CAPABILITIES:
+- Crop agronomy (planting timing, pest/disease mitigation, irrigation, rain harvest).
+- Livestock keeping & animal health (Heat Stress THI management, shade structures, electrolyte water, tick/vector-borne diseases like East Coast Fever, Rift Valley Fever, Mastitis, vaccination schedules).
+- Climate-smart pasture & fodder management (Napier silage pit making, hay storage, water trough hygiene).
 
 RULES:
 - Address the farmer respectfully and concisely.
-- Use simple agricultural terms (explain technical terms clearly).
-- Give exact step-by-step guidance on timing (e.g. "Wait 3 days", "Spray before 8:00 AM", "Apply 50kg/ha top-dressing").
-- Always explain the *why* (e.g., link heavy rainfall to seed washout or fungal spore germination).
-- Highlight safety and sustainability (organic neem, biological controls, proper drainage).
-- Provide 2-3 short, actionable bullet points at the end.
+- Provide step-by-step guidance on timing, dosages, and climate adaptation.
+- Always explain the *why* (e.g. linking high humidity + high temp to THI heat stress or fungal spore/tick proliferation).
+- Provide 2-3 actionable bullet points at the end.
 
 CURRENT FARM CONTEXT:
 ${farmContext}
@@ -269,20 +279,20 @@ ${reportsContext}`;
         },
       });
 
-      const replyText = response.text || "I'm reviewing your farm conditions. Based on expected rain, delay planting and clear drainage paths to protect your topsoil.";
+      const replyText = response.text || "I'm reviewing your farm and livestock conditions. Deploy shade covers for dairy cows and inspect leaf whorls for pests before upcoming heavy rain.";
 
       const quickActions = [
-        `Should I irrigate my ${farm?.cropType || 'crops'} today?`,
-        `How do I protect against Fall Armyworm?`,
-        `When is the best market day to sell?`,
+        `How do I protect my ${farm?.livestockType ? 'livestock herd' : 'crops'} during heatwaves?`,
+        `How do I preserve Napier grass into silage before flooding?`,
+        `What are current milk & grain market prices?`,
       ];
 
       res.json({ reply: replyText, quickActions });
     } catch (err) {
       console.error('Gemini Assistant API Error:', err);
       res.json({
-        reply: `Hello! Based on your farm profile (${farm?.cropType || 'Maize'}, ${farm?.growthStage || 'Vegetative stage'}) and today's weather forecast (${weather?.rainfallMm || 38.4}mm rain, ${weather?.humidity || 76}% humidity):\n\n1. **Delay Planting/Irrigation**: High soil moisture and upcoming heavy downpours increase seed washout risk.\n2. **Inspect Foliage**: High humidity favors fungal spores. Check lower leaves for spots.\n3. **Prepare Drainage**: Ensure farm perimeter trenches are clear to handle surface runoff.`,
-        quickActions: ['Should I irrigate today?', 'Pest outbreak advice', 'Market price recommendations'],
+        reply: `Hello! Based on your farm profile (${farm?.cropType || 'Maize'}, ${farm?.livestockType || 'Dairy Cattle'}, ${farm?.growthStage || 'Lactation / Growth stage'}) and today's weather forecast (${weather?.rainfallMm || 38.4}mm rain, THI ${weather?.livestockThi || 74.5}):\n\n1. **Livestock Heat Stress & Water**: THI exceeds 72. Provide shaded loafing sheds and clean electrolyte water for dairy cows.\n2. **Fodder Preservation**: Chop and pit ensile mature Napier grass before expected 38mm downpours.\n3. **Pest & Vector Checks**: Spray cattle against East Coast Fever ticks and check crop leaves for armyworm.`,
+        quickActions: ['How to mitigate THI heat stress?', 'Fodder silage preservation', 'Milk & Market price updates'],
       });
     }
   });
@@ -291,7 +301,10 @@ ${reportsContext}`;
   app.post('/api/gemini/recommendations', async (req, res) => {
     const { farm, weather, nearbyReports } = req.body;
 
-    const systemInstruction = `You are AgriShield AI's Decision Recommendation Generator. Analyze the provided farm data, weather forecast, and nearby community pest reports. Return 3 personalized, highly actionable climate risk recommendations in valid JSON array format. Each object must strictly match the schema specified.`;
+    const systemInstruction = `You are AgriShield AI's Decision Recommendation Generator for Climate-Smart Agriculture & Livestock Keeping (EldoHub Hackathon 2026).
+Analyze farm data, weather forecast, and community pest/livestock reports.
+Return 3 personalized, actionable climate risk recommendations in valid JSON array format.
+Cover BOTH crops AND livestock where applicable (e.g., THI shade management, silage making, tick control, planting delays).`;
 
     const promptText = `Farm: ${JSON.stringify(farm || {})}\nWeather: ${JSON.stringify(weather || {})}\nReports: ${JSON.stringify(nearbyReports || [])}`;
 
@@ -310,7 +323,7 @@ ${reportsContext}`;
                 id: { type: Type.STRING },
                 farmId: { type: Type.STRING },
                 title: { type: Type.STRING },
-                actionType: { type: Type.STRING, description: "One of: 'irrigation', 'planting', 'harvest', 'pest_control', 'fertilizer', 'crop_switch'" },
+                actionType: { type: Type.STRING, description: "One of: 'irrigation', 'planting', 'harvest', 'pest_control', 'fertilizer', 'crop_switch', 'livestock_shelter', 'fodder_preservation', 'vaccination', 'pasture_rotation', 'water_management'" },
                 priority: { type: Type.STRING, description: "One of: 'high', 'medium', 'low'" },
                 summary: { type: Type.STRING },
                 reason: { type: Type.STRING },

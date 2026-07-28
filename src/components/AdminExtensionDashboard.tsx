@@ -124,10 +124,10 @@ export const AdminExtensionDashboard: React.FC<AdminExtensionDashboardProps> = (
               <thead className="bg-stone-100 text-stone-600 uppercase font-bold text-[10px] tracking-wider border-b border-stone-200">
                 <tr>
                   <th className="p-2.5">Farm Name</th>
-                  <th className="p-2.5">Crop & Stage</th>
+                  <th className="p-2.5">Crops & Livestock</th>
                   <th className="p-2.5">Location</th>
                   <th className="p-2.5">Risk Score</th>
-                  <th className="p-2.5">Health</th>
+                  <th className="p-2.5">Health Score</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-150 font-medium text-stone-800">
@@ -135,7 +135,12 @@ export const AdminExtensionDashboard: React.FC<AdminExtensionDashboardProps> = (
                   <tr key={f.id} className="hover:bg-stone-50 transition-colors">
                     <td className="p-2.5 font-bold text-stone-900">{f.name}</td>
                     <td className="p-2.5">
-                      <span className="font-semibold">{f.cropType}</span> ({f.growthStage})
+                      <div className="font-semibold">{f.cropType}</div>
+                      {f.livestockType && (
+                        <div className="text-[11px] text-amber-700 font-medium">
+                          {f.livestockType} ({f.headCount || 10} head)
+                        </div>
+                      )}
                     </td>
                     <td className="p-2.5 text-stone-600">{f.locationName}</td>
                     <td className="p-2.5">

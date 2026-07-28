@@ -20,6 +20,21 @@ import {
   INITIAL_MARKET_PRICES,
   INITIAL_NOTIFICATIONS,
 } from './data/mockData';
+import {
+  initializeAndSeedSupabase,
+  getFarmsFromDb,
+  saveFarmToDb,
+  getReportsFromDb,
+  addReportToDb,
+  updateReportInDb,
+  getRecommendationsFromDb,
+  updateRecommendationStatusInDb,
+  saveRecommendationsToDb,
+  getDiseasePredictionsFromDb,
+  getMarketPricesFromDb,
+  getNotificationsFromDb,
+  addNotificationToDb,
+} from './lib/dbService';
 
 // UI Components
 import { Navbar } from './components/Navbar';
@@ -68,6 +83,41 @@ export default function App() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
+  // Initialize and load data from Supabase
+  useEffect(() => {
+    async function loadSupabaseData() {
+      await initializeAndSeedSupabase();
+
+      const [
+        dbFarms,
+        dbReports,
+        dbRecs,
+        dbPreds,
+        dbMarkets,
+        dbNotifs,
+      ] = await Promise.all([
+        getFarmsFromDb(),
+        getReportsFromDb(),
+        getRecommendationsFromDb(),
+        getDiseasePredictionsFromDb(),
+        getMarketPricesFromDb(),
+        getNotificationsFromDb(),
+      ]);
+
+      if (dbFarms && dbFarms.length > 0) {
+        setFarms(dbFarms);
+        setActiveFarm(dbFarms[0]);
+      }
+      if (dbReports && dbReports.length > 0) setReports(dbReports);
+      if (dbRecs && dbRecs.length > 0) setRecommendations(dbRecs);
+      if (dbPreds && dbPreds.length > 0) setPredictions(dbPreds);
+      if (dbMarkets && dbMarkets.length > 0) setMarkets(dbMarkets);
+      if (dbNotifs && dbNotifs.length > 0) setNotifications(dbNotifs);
+    }
+
+    loadSupabaseData();
+  }, []);
+
   // Load weather when active farm changes
   useEffect(() => {
     async function loadWeather() {
@@ -94,72 +144,59 @@ export default function App() {
 
   // Handle adding community report
   const handleAddReport = async (newRep: Partial<CommunityReport>) => {
-    const reportData = {
-      ...newRep,
+    const reportData: CommunityReport = {
+      id: `rep-${Date.now()}`,
       userId: user.id,
       userName: user.name,
       farmName: activeFarm.name,
+      reportType: newRep.reportType || 'pest',
+      cropAffected: newRep.cropAffected || activeFarm.cropType,
+      severity: newRep.severity || 'high',
+      description: newRep.description || 'Observed pest activity in field.',
+      photoUrl: newRep.photoUrl,
       lat: activeFarm.lat + (Math.random() * 0.01 - 0.005),
       lng: activeFarm.lng + (Math.random() * 0.01 - 0.005),
+      createdAt: new Date().toISOString(),
+      verified: true,
+      upvotes: 1,
+      distanceKm: 0.5,
     };
 
-    try {
-      const res = await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reportData),
-      });
-      if (res.ok) {
-        const created = await res.json();
-        setReports([created, ...reports]);
-      }
-    } catch (err) {
-      const fallbackRep: CommunityReport = {
-        id: `rep-${Date.now()}`,
-        userId: user.id,
-        userName: user.name,
-        farmName: activeFarm.name,
-        reportType: newRep.reportType || 'pest',
-        cropAffected: newRep.cropAffected || activeFarm.cropType,
-        severity: newRep.severity || 'high',
-        description: newRep.description || 'Observed pest activity in field.',
-        photoUrl: newRep.photoUrl,
-        lat: activeFarm.lat,
-        lng: activeFarm.lng,
-        createdAt: new Date().toISOString(),
-        verified: true,
-        upvotes: 1,
-        distanceKm: 0.5,
-      };
-      setReports([fallbackRep, ...reports]);
-    }
+    setReports((prev) => [reportData, ...prev]);
+    await addReportToDb(reportData);
   };
 
   // Handle upvoting report
-  const handleUpvoteReport = (id: string) => {
+  const handleUpvoteReport = async (id: string) => {
+    const reportToUpdate = reports.find((r) => r.id === id);
+    if (!reportToUpdate) return;
+    const newUpvotes = reportToUpdate.upvotes + 1;
     setReports((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, upvotes: r.upvotes + 1 } : r))
+      prev.map((r) => (r.id === id ? { ...r, upvotes: newUpvotes } : r))
     );
+    await updateReportInDb(id, { upvotes: newUpvotes });
   };
 
   // Handle verifying report
-  const handleVerifyReport = (id: string) => {
+  const handleVerifyReport = async (id: string) => {
     setReports((prev) =>
       prev.map((r) => (r.id === id ? { ...r, verified: true } : r))
     );
+    await updateReportInDb(id, { verified: true });
   };
 
   // Handle recommendation status change
-  const handleRecommendationStatusChange = (
+  const handleRecommendationStatusChange = async (
     id: string,
     newStatus: 'accepted' | 'completed' | 'dismissed'
   ) => {
     setRecommendations((prev) =>
       prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
     );
+    await updateRecommendationStatusInDb(id, newStatus);
   };
 
-  // Refresh AI recommendations via Gemini
+  // Refresh AI recommendations via Gemini & persist to Firestore
   const handleRefreshAI = async () => {
     setIsGeneratingAI(true);
     try {
@@ -175,6 +212,7 @@ export default function App() {
       if (res.ok) {
         const freshRecs = await res.json();
         setRecommendations(freshRecs);
+        await saveRecommendationsToDb(freshRecs);
       }
     } catch (err) {
       console.error('Failed to generate fresh AI recommendations:', err);
@@ -184,14 +222,15 @@ export default function App() {
   };
 
   // Handle update farm profile
-  const handleUpdateFarm = (updated: Partial<Farm>) => {
+  const handleUpdateFarm = async (updated: Partial<Farm>) => {
     const updatedFarm = { ...activeFarm, ...updated };
     setActiveFarm(updatedFarm);
     setFarms((prev) => prev.map((f) => (f.id === updatedFarm.id ? updatedFarm : f)));
+    await saveFarmToDb(updatedFarm);
   };
 
-  // Broadcast Alert from Extension Officer
-  const handleSendBroadcast = (title: string, message: string) => {
+  // Broadcast Alert from Extension Officer & persist to Firestore
+  const handleSendBroadcast = async (title: string, message: string) => {
     const newNotif: AlertNotification = {
       id: `notif-${Date.now()}`,
       title,
@@ -201,7 +240,8 @@ export default function App() {
       timestamp: new Date().toISOString(),
       read: false,
     };
-    setNotifications([newNotif, ...notifications]);
+    setNotifications((prev) => [newNotif, ...prev]);
+    await addNotificationToDb(newNotif);
   };
 
   const navTabs = [

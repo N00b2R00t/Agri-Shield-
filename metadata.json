@@ -1,0 +1,6 @@
+{
+  "name": "AgriShield AI",
+  "description": "Climate Risk Intelligence & Decision-Support Platform for Smallholder Farmers",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

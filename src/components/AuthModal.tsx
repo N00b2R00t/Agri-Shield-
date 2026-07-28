@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { AgriShieldLogoFull } from './AgriShieldLogo';
 import { UserProfile, UserRole } from '../types';
+import { KENYA_COUNTIES } from '../data/kenyaCounties';
 import { supabase } from '../lib/supabase';
 import { saveProfileToDb } from '../lib/dbService';
 import {
@@ -129,16 +130,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     // Hash password client side before transmission/storage verification
     const hashedPassword = await hashPassword(loginPassword);
 
-    // Special check for Ian Kipkoech Chirchir admin email
-    if (emailClean === 'iankipkoechchirchir06@gmail.com') {
-      if (loginPassword && loginPassword.length >= 4) {
-        loginRateLimiter.recordSuccess(emailClean);
-        handleQuickAdminLogin();
-        return;
-      }
-    }
-
-    try {
+      // Standard Supabase authentication or local user session sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email: emailClean,
         password: loginPassword,
@@ -462,19 +454,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-stone-300 font-bold mb-1">County / Region</label>
+                  <label className="block text-stone-300 font-bold mb-1">County / Region (47 Counties)</label>
                   <select
                     value={county}
                     onChange={(e) => setCounty(e.target.value)}
-                    className="w-full p-2 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 focus:border-emerald-500"
+                    className="w-full p-2 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 focus:border-emerald-500 font-bold"
                   >
-                    <option value="Uasin Gishu">Uasin Gishu (Eldoret)</option>
-                    <option value="Nakuru">Nakuru</option>
-                    <option value="Trans Nzoia">Trans Nzoia (Kitale)</option>
-                    <option value="Nandi">Nandi</option>
-                    <option value="Narok">Narok</option>
-                    <option value="Kiambu">Kiambu</option>
-                    <option value="Meru">Meru</option>
+                    {KENYA_COUNTIES.map((c) => (
+                      <option key={c.code} value={c.name}>
+                        {c.code} - {c.name} ({c.region})
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

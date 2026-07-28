@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile, Farm, CropType, GrowthStage, SoilType, IrrigationMethod } from '../types';
 import { User, Sprout, MapPin, X, Check } from 'lucide-react';
+import { KENYA_COUNTIES } from '../data/kenyaCounties';
 
 interface FarmerProfileModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
   onUpdateFarm,
 }) => {
   const [farmName, setFarmName] = useState(activeFarm.name);
+  const [county, setCounty] = useState(activeFarm.county || 'Uasin Gishu');
   const [category, setCategory] = useState<'crop' | 'livestock' | 'mixed'>(activeFarm.category || 'mixed');
   const [cropType, setCropType] = useState<CropType>(activeFarm.cropType);
   const [livestockType, setLivestockType] = useState<string>(activeFarm.livestockType || 'Dairy Cattle');
@@ -32,8 +34,12 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const countyObj = KENYA_COUNTIES.find((c) => c.name === county);
     onUpdateFarm({
       name: farmName,
+      county,
+      lat: countyObj ? countyObj.lat : activeFarm.lat,
+      lng: countyObj ? countyObj.lng : activeFarm.lng,
       category,
       cropType,
       livestockType,
@@ -77,7 +83,7 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
             <span>Active Farm Configuration: {activeFarm.id}</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-stone-700 font-bold mb-1">Farm Name</label>
               <input
@@ -87,6 +93,20 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
                 className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 font-bold"
                 required
               />
+            </div>
+            <div>
+              <label className="block text-stone-700 font-bold mb-1">County (47 Counties)</label>
+              <select
+                value={county}
+                onChange={(e) => setCounty(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 font-bold"
+              >
+                {KENYA_COUNTIES.map((c) => (
+                  <option key={c.code} value={c.name}>
+                    {c.code} - {c.name} ({c.region})
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-stone-700 font-bold mb-1">Enterprise Type</label>

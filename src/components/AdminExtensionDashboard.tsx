@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Farm, CommunityReport, UserRole, UserProfile } from '../types';
 import { AdminUserManagement } from './AdminUserManagement';
+import { KENYA_COUNTIES } from '../data/kenyaCounties';
 import {
   Building2,
   Users,
@@ -46,6 +47,7 @@ export const AdminExtensionDashboard: React.FC<AdminExtensionDashboardProps> = (
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcastSent, setBroadcastSent] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCounty, setSelectedCounty] = useState<string>('all');
 
   const handleBroadcastSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,12 +60,14 @@ export const AdminExtensionDashboard: React.FC<AdminExtensionDashboardProps> = (
     setBroadcastMessage('');
   };
 
-  const filteredFarms = farms.filter(
-    (f) =>
+  const filteredFarms = farms.filter((f) => {
+    const matchesSearch =
       f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       f.county.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.cropType.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      f.cropType.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCounty = selectedCounty === 'all' || f.county === selectedCounty;
+    return matchesSearch && matchesCounty;
+  });
 
   // Risk distribution metrics
   const highRiskFarms = farms.filter((f) => f.riskScore > 65).length;
@@ -174,21 +178,36 @@ export const AdminExtensionDashboard: React.FC<AdminExtensionDashboardProps> = (
           
           {/* Multi-Farm Table (7 cols) */}
           <div className="lg:col-span-7 bg-white rounded-2xl border border-stone-200 shadow-sm p-5 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <h3 className="text-base font-bold text-stone-900 flex items-center space-x-2">
                 <Users className="w-5 h-5 text-blue-600" />
                 <span>Smallholder Farm Registry & Risk Table</span>
               </h3>
 
-              <div className="relative w-48">
-                <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2.5" />
-                <input
-                  type="text"
-                  placeholder="Search farm or crop..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-stone-300 text-xs text-stone-900 bg-stone-50"
-                />
+              <div className="flex items-center space-x-2">
+                <select
+                  value={selectedCounty}
+                  onChange={(e) => setSelectedCounty(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-800 bg-stone-50 focus:outline-none"
+                >
+                  <option value="all">All 47 Counties</option>
+                  {KENYA_COUNTIES.map((c) => (
+                    <option key={c.code} value={c.name}>
+                      {c.code} - {c.name}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="relative w-40 sm:w-48">
+                  <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="Search farm or crop..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-stone-300 text-xs text-stone-900 bg-stone-50"
+                  />
+                </div>
               </div>
             </div>
 

@@ -376,58 +376,61 @@ export default function App() {
         <OfflinePage mode="banner" />
 
         {/* Navbar Header */}
-      <Navbar
-        user={user}
-        activeFarm={activeFarm}
-        farms={farms}
-        onSelectFarm={(f) => setActiveFarm(f)}
-        onChangeRole={handleChangeRole}
-        onOpenNewFarmModal={() => setShowNewFarmModal(true)}
-        onOpenLivestockModal={() => setShowLivestockModal(true)}
-        onOpenSettingsModal={() => setShowSettingsModal(true)}
-        onOpenProfileModal={() => setShowProfileModal(true)}
-        onOpenAuthModal={() => setShowAuthModal(true)}
-        onSignOut={handleSignOut}
-        notifications={notifications}
-        onOpenAssistant={() => setShowAssistant(true)}
-      />
+        <Navbar
+          user={user}
+          activeFarm={activeFarm}
+          farms={farms}
+          onSelectFarm={(f) => setActiveFarm(f)}
+          onChangeRole={handleChangeRole}
+          onOpenNewFarmModal={() => setShowNewFarmModal(true)}
+          onOpenLivestockModal={() => setShowLivestockModal(true)}
+          onOpenSettingsModal={() => setShowSettingsModal(true)}
+          onOpenProfileModal={() => setShowProfileModal(true)}
+          onOpenAuthModal={() => setShowAuthModal(true)}
+          onSignOut={handleSignOut}
+          notifications={notifications}
+          onOpenAssistant={() => setShowAssistant(true)}
+          activeTab={activeTab}
+          onSelectTab={(tabId) => setActiveTab(tabId as any)}
+          navTabs={navTabs}
+        />
 
-      {/* Persona View Perspective Banner */}
-      <RoleBanner role={user.role} onChangeRole={handleChangeRole} />
+        {/* Persona View Perspective Banner */}
+        <RoleBanner role={user.role} onChangeRole={handleChangeRole} />
 
-      {/* Main App Workspace Navigation Tabs Bar */}
-      <div className="bg-stone-900 text-stone-200 border-b border-stone-800 shadow-inner">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto py-2 text-xs font-semibold no-scrollbar">
-            {navTabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-xl whitespace-nowrap transition-all ${
-                    isActive
-                      ? 'bg-emerald-500 text-stone-950 font-extrabold shadow-md'
-                      : 'text-stone-300 hover:text-white hover:bg-stone-800'
-                  }`}
-                >
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                  {tab.badge !== undefined && tab.badge > 0 && (
-                    <span
-                      className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                        isActive ? 'bg-stone-950 text-emerald-300' : 'bg-emerald-500/20 text-emerald-300'
-                      }`}
-                    >
-                      {tab.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
+        {/* Desktop Workspace Navigation Tabs Bar */}
+        <div className="hidden md:block bg-stone-900 text-stone-200 border-b border-stone-800 shadow-inner">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto py-2 text-xs font-semibold no-scrollbar">
+              {navTabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-xl whitespace-nowrap transition-all ${
+                      isActive
+                        ? 'bg-emerald-500 text-stone-950 font-extrabold shadow-md'
+                        : 'text-stone-300 hover:text-white hover:bg-stone-800'
+                    }`}
+                  >
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                    {tab.badge !== undefined && tab.badge > 0 && (
+                      <span
+                        className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                          isActive ? 'bg-stone-950 text-emerald-300' : 'bg-emerald-500/20 text-emerald-300'
+                        }`}
+                      >
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
-      </div>
 
       {/* Active Tab View Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">

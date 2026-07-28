@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Farm, CropType, SoilType, IrrigationMethod, GrowthStage } from '../types';
 import { Sprout, MapPin, X, Check, ShieldCheck, Plus } from 'lucide-react';
+import { KENYA_COUNTIES } from '../data/kenyaCounties';
 
 interface NewFarmModalProps {
   isOpen: boolean;
@@ -33,6 +34,8 @@ export const NewFarmModal: React.FC<NewFarmModalProps> = ({
     e.preventDefault();
     if (!name.trim()) return;
 
+    const selectedCountyObj = KENYA_COUNTIES.find((c) => c.name === county) || KENYA_COUNTIES[26];
+
     const farmId = `farm-${Date.now()}`;
     const newFarm: Farm = {
       id: farmId,
@@ -41,8 +44,8 @@ export const NewFarmModal: React.FC<NewFarmModalProps> = ({
       locationName: locationName.trim(),
       county,
       country: 'Kenya',
-      lat: -0.5142,
-      lng: 35.2698,
+      lat: selectedCountyObj.lat,
+      lng: selectedCountyObj.lng,
       category,
       cropType,
       livestockType: category === 'crop' ? undefined : (livestockType as any),
@@ -53,10 +56,10 @@ export const NewFarmModal: React.FC<NewFarmModalProps> = ({
       soilType,
       irrigationMethod,
       boundaryCoordinates: [
-        [-0.5142, 35.2698],
-        [-0.5140, 35.2710],
-        [-0.5160, 35.2710],
-        [-0.5160, 35.2698],
+        [selectedCountyObj.lat + 0.001, selectedCountyObj.lng - 0.001],
+        [selectedCountyObj.lat + 0.002, selectedCountyObj.lng + 0.002],
+        [selectedCountyObj.lat - 0.001, selectedCountyObj.lng + 0.002],
+        [selectedCountyObj.lat - 0.002, selectedCountyObj.lng - 0.001],
       ],
       riskScore: 35,
       cropHealthScore: 88,
@@ -78,7 +81,7 @@ export const NewFarmModal: React.FC<NewFarmModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-stone-100">Register New Farm Parcel</h3>
-              <p className="text-xs text-stone-400">Add land coordinates, crop type, and livestock to AgriShield AI</p>
+              <p className="text-xs text-stone-400">Select any of Kenya's 47 counties, crop type, and livestock</p>
             </div>
           </div>
           <button
@@ -115,18 +118,17 @@ export const NewFarmModal: React.FC<NewFarmModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-stone-300 font-bold mb-1">County Region</label>
+              <label className="block text-stone-300 font-bold mb-1">Kenya County (47 Counties)</label>
               <select
                 value={county}
                 onChange={(e) => setCounty(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100"
+                className="w-full p-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 focus:border-emerald-500 font-bold"
               >
-                <option value="Uasin Gishu">Uasin Gishu (Eldoret)</option>
-                <option value="Nakuru">Nakuru</option>
-                <option value="Trans Nzoia">Trans Nzoia (Kitale)</option>
-                <option value="Nandi">Nandi</option>
-                <option value="Narok">Narok</option>
-                <option value="Kiambu">Kiambu</option>
+                {KENYA_COUNTIES.map((c) => (
+                  <option key={c.code} value={c.name}>
+                    {c.code} - {c.name} ({c.region})
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -183,7 +185,10 @@ export const NewFarmModal: React.FC<NewFarmModalProps> = ({
                 <option value="Tomatoes">Tomatoes</option>
                 <option value="Beans">Beans</option>
                 <option value="Coffee">Coffee</option>
-                <option value="Napier Grass">Napier Grass (Fodder)</option>
+                <option value="Wheat">Wheat</option>
+                <option value="Rice">Rice</option>
+                <option value="Cassava">Cassava</option>
+                <option value="Napier / Pasture Forage">Napier Grass / Pasture Forage</option>
               </select>
             </div>
 
@@ -195,10 +200,12 @@ export const NewFarmModal: React.FC<NewFarmModalProps> = ({
                   onChange={(e) => setLivestockType(e.target.value)}
                   className="w-full p-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100"
                 >
-                  <option value="Dairy Cattle">Dairy Cattle</option>
-                  <option value="Dairy Goats / Sheep">Dairy Goats / Sheep</option>
-                  <option value="Poultry Layers / Kienyeji">Poultry Layers / Kienyeji</option>
-                  <option value="Apiculture / Bees">Apiculture / Bees</option>
+                  <option value="Dairy Cattle (Friesian/Ayrshire)">Dairy Cattle (Friesian/Ayrshire)</option>
+                  <option value="Beef Cattle (Boran/Zebu)">Beef Cattle (Boran/Zebu)</option>
+                  <option value="Goats & Sheep (Dorper/Galla)">Goats & Sheep (Dorper/Galla)</option>
+                  <option value="Poultry (Kienyeji / Layers)">Poultry (Kienyeji / Layers)</option>
+                  <option value="Apiculture (Honeybees)">Apiculture (Honeybees)</option>
+                  <option value="Aquaculture (Tilapia/Catfish)">Aquaculture (Tilapia/Catfish)</option>
                 </select>
               </div>
             )}
@@ -228,6 +235,7 @@ export const NewFarmModal: React.FC<NewFarmModalProps> = ({
                 <option value="Clay">Clay</option>
                 <option value="Sandy">Sandy</option>
                 <option value="Volcanic">Volcanic</option>
+                <option value="Pasture Rangeland">Pasture Rangeland</option>
               </select>
             </div>
 
@@ -242,6 +250,7 @@ export const NewFarmModal: React.FC<NewFarmModalProps> = ({
                 <option value="Drip Irrigation">Drip Irrigation</option>
                 <option value="Furrow / Flood">Furrow / Flood</option>
                 <option value="Sprinkler">Sprinkler</option>
+                <option value="Borehole / Livestock Trough">Borehole / Livestock Trough</option>
               </select>
             </div>
           </div>

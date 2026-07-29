@@ -34,29 +34,13 @@ export async function initializeAndSeedSupabase() {
   }
 
   try {
-    // 1. Seed Farms if empty
-    const { data: farms, error: farmsErr } = await supabase.from('farms').select('id').limit(1);
-    if (!farmsErr && (!farms || farms.length === 0)) {
-      console.log('Seeding initial farms to Supabase PostgreSQL...');
-      for (const farm of INITIAL_FARMS) {
-        await saveFarmToDb(farm);
-      }
-    }
-
-    // 2. Seed Reports
+    // 1. Seed Reports if empty
     const { data: reports, error: repErr } = await supabase.from('community_reports').select('id').limit(1);
     if (!repErr && (!reports || reports.length === 0)) {
       console.log('Seeding community reports to Supabase PostgreSQL...');
       for (const rep of INITIAL_REPORTS) {
         await addReportToDb(rep);
       }
-    }
-
-    // 3. Seed Recommendations
-    const { data: recs, error: recErr } = await supabase.from('recommendations').select('id').limit(1);
-    if (!recErr && (!recs || recs.length === 0)) {
-      console.log('Seeding recommendations to Supabase PostgreSQL...');
-      await saveRecommendationsToDb(INITIAL_RECOMMENDATIONS);
     }
   } catch (err) {
     console.warn('Supabase initialization check:', err);

@@ -95,8 +95,30 @@ export default function App() {
     return INITIAL_USER;
   });
   const [usersList, setUsersList] = useState<UserProfile[]>(INITIAL_USERS);
-  const [farms, setFarms] = useState<Farm[]>(INITIAL_FARMS);
-  const [activeFarm, setActiveFarm] = useState<Farm>(INITIAL_FARMS[0]);
+  const [farms, setFarms] = useState<Farm[]>(() => {
+    const saved = localStorage.getItem('agrishield_user_farms');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {
+        // Fallback
+      }
+    }
+    return [];
+  });
+  const [activeFarm, setActiveFarm] = useState<Farm | null>(() => {
+    const saved = localStorage.getItem('agrishield_user_farms');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+      } catch {
+        // Fallback
+      }
+    }
+    return null;
+  });
 
   const [weather, setWeather] = useState<WeatherSummary>(INITIAL_WEATHER);
   const [recommendations, setRecommendations] = useState<Recommendation[]>(INITIAL_RECOMMENDATIONS);
@@ -479,15 +501,18 @@ export default function App() {
             onOpenMap={() => setActiveTab('map')}
             onOpenWhatIf={() => setActiveTab('whatif')}
             onOpenReportModal={() => setActiveTab('community')}
+            onOpenNewFarmModal={() => setShowNewFarmModal(true)}
           />
         )}
 
         {activeTab === 'recommendations' && (
           <SmartRecommendations
-            recommendations={recommendations}
+            farm={activeFarm}
+            recommendations={recommendations.filter((r) => !activeFarm || r.farmId === activeFarm.id)}
             onStatusChange={handleRecommendationStatusChange}
             onRefreshAI={handleRefreshAI}
             isGeneratingAI={isGeneratingAI}
+            onOpenNewFarmModal={() => setShowNewFarmModal(true)}
           />
         )}
 

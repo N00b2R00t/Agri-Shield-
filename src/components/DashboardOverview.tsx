@@ -29,13 +29,14 @@ import {
 } from 'recharts';
 
 interface DashboardOverviewProps {
-  farm: Farm;
+  farm: Farm | null;
   weather: WeatherSummary;
   recommendations: Recommendation[];
   onOpenAssistant: () => void;
   onOpenMap: () => void;
   onOpenWhatIf: () => void;
   onOpenReportModal: () => void;
+  onOpenNewFarmModal?: () => void;
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
@@ -46,8 +47,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onOpenMap,
   onOpenWhatIf,
   onOpenReportModal,
+  onOpenNewFarmModal,
 }) => {
-  const pendingHighRecs = recommendations.filter((r) => r.status === 'pending' && r.priority === 'high');
+  const pendingHighRecs = farm
+    ? recommendations.filter((r) => r.farmId === farm.id && r.status === 'pending' && r.priority === 'high')
+    : [];
 
   // Prepare chart data from forecast
   const chartData = weather.forecast.map((f) => ({
@@ -62,90 +66,125 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     <div className="space-y-6">
       
       {/* Top Welcome / Farm Context Banner */}
-      <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-emerald-950 rounded-2xl p-5 sm:p-6 text-stone-100 shadow-xl border border-stone-800 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center space-x-2 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+      {!farm ? (
+        <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden space-y-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 text-emerald-400 text-xs font-bold uppercase tracking-wider bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
               <ShieldAlert className="w-4 h-4" />
-              <span>Real-Time Climate Risk Intelligence</span>
+              <span>Regional Climate Radar Active</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-              {farm.name}
+            <h1 className="text-2xl sm:text-3xl font-black text-stone-100">
+              No Registered Farm or Shamba
             </h1>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-300">
-              <span className="flex items-center space-x-1">
-                <MapPin className="w-3.5 h-3.5 text-stone-400" />
-                <span>{farm.locationName}</span>
-              </span>
-              <span>•</span>
-              <span className="font-semibold text-emerald-300">
-                {farm.category === 'livestock' ? 'Livestock Agribusiness' : farm.category === 'mixed' ? 'Mixed Crops & Livestock' : 'Crop Agribusiness'}
-              </span>
-              <span>•</span>
-              <span>Crops: {farm.cropType} ({farm.growthStage})</span>
-              {farm.livestockType && (
-                <>
-                  <span>•</span>
-                  <span className="text-amber-300 font-semibold">
-                    Livestock: {farm.livestockType} ({farm.headCount || 12} Head)
-                  </span>
-                </>
-              )}
-              <span>•</span>
-              <span>{farm.areaHectares} Hectares</span>
-              <span>•</span>
-              <span>Soil: {farm.soilType}</span>
-            </div>
+            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
+              Register your farm location to unlock personalized AI climate models, crop disease risk predictions, field livestock heat index alerts, and custom decision support.
+            </p>
           </div>
 
-          {/* Action Triggers */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+            {onOpenNewFarmModal && (
+              <button
+                onClick={onOpenNewFarmModal}
+                className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-lg shadow-emerald-950/60 transition-transform active:scale-95"
+              >
+                <span>+ Register New Farm</span>
+              </button>
+            )}
             <button
               onClick={onOpenAssistant}
-              className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs flex items-center space-x-2 shadow-lg shadow-emerald-950/40 transition-transform active:scale-95"
+              className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold text-xs sm:text-sm flex items-center justify-center space-x-2 border border-stone-700"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>Ask AI Farming Assistant</span>
-            </button>
-            <button
-              onClick={onOpenWhatIf}
-              className="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold text-xs border border-stone-700 flex items-center space-x-1.5 transition-colors"
-            >
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span>What-If Simulator</span>
-            </button>
-            <button
-              onClick={onOpenReportModal}
-              className="px-3.5 py-2 rounded-xl bg-red-950/80 hover:bg-red-900 text-red-200 font-semibold text-xs border border-red-800/80 flex items-center space-x-1.5 transition-colors"
-            >
-              <Bug className="w-3.5 h-3.5 text-red-400" />
-              <span>Report Outbreak</span>
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span>Ask AI Assistant</span>
             </button>
           </div>
         </div>
-
-        {/* High Urgency Recommendation Alert Banner */}
-        {pendingHighRecs.length > 0 && (
-          <div className="mt-4 p-3 rounded-xl bg-red-950/90 border border-red-700/80 text-red-100 flex items-start sm:items-center justify-between gap-3 shadow-md">
-            <div className="flex items-start space-x-2.5">
-              <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5 sm:mt-0 animate-pulse" />
-              <div>
-                <div className="font-bold text-xs text-red-200">
-                  CRITICAL DECISION: {pendingHighRecs[0].title}
-                </div>
-                <div className="text-[11px] text-red-300 opacity-90 line-clamp-1">
-                  {pendingHighRecs[0].summary}
-                </div>
+      ) : (
+        <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-emerald-950 rounded-2xl p-5 sm:p-6 text-stone-100 shadow-xl border border-stone-800 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center space-x-2 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                <ShieldAlert className="w-4 h-4" />
+                <span>Real-Time Climate Risk Intelligence</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                {farm.name}
+              </h1>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-300">
+                <span className="flex items-center space-x-1">
+                  <MapPin className="w-3.5 h-3.5 text-stone-400" />
+                  <span>{farm.locationName}</span>
+                </span>
+                <span>•</span>
+                <span className="font-semibold text-emerald-300">
+                  {farm.category === 'livestock' ? 'Livestock Agribusiness' : farm.category === 'mixed' ? 'Mixed Crops & Livestock' : 'Crop Agribusiness'}
+                </span>
+                <span>•</span>
+                <span>Crops: {farm.cropType} ({farm.growthStage})</span>
+                {farm.livestockType && (
+                  <>
+                    <span>•</span>
+                    <span className="text-amber-300 font-semibold">
+                      Livestock: {farm.livestockType} ({farm.headCount || 12} Head)
+                    </span>
+                  </>
+                )}
+                <span>•</span>
+                <span>{farm.areaHectares} Hectares</span>
+                <span>•</span>
+                <span>Soil: {farm.soilType}</span>
               </div>
             </div>
-            <span className="text-[10px] uppercase tracking-wider font-extrabold bg-red-800 px-2.5 py-1 rounded-md shrink-0">
-              {pendingHighRecs[0].confidenceScore}% Confidence
-            </span>
+
+            {/* Action Triggers */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={onOpenAssistant}
+                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs flex items-center space-x-2 shadow-lg shadow-emerald-950/40 transition-transform active:scale-95"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Ask AI Farming Assistant</span>
+              </button>
+              <button
+                onClick={onOpenWhatIf}
+                className="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold text-xs border border-stone-700 flex items-center space-x-1.5 transition-colors"
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span>What-If Simulator</span>
+              </button>
+              <button
+                onClick={onOpenReportModal}
+                className="px-3.5 py-2 rounded-xl bg-red-950/80 hover:bg-red-900 text-red-200 font-semibold text-xs border border-red-800/80 flex items-center space-x-1.5 transition-colors"
+              >
+                <Bug className="w-3.5 h-3.5 text-red-400" />
+                <span>Report Outbreak</span>
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* High Urgency Recommendation Alert Banner */}
+          {pendingHighRecs.length > 0 && (
+            <div className="mt-4 p-3 rounded-xl bg-red-950/90 border border-red-700/80 text-red-100 flex items-start sm:items-center justify-between gap-3 shadow-md">
+              <div className="flex items-start space-x-2.5">
+                <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5 sm:mt-0 animate-pulse" />
+                <div>
+                  <div className="font-bold text-xs text-red-200">
+                    CRITICAL DECISION: {pendingHighRecs[0].title}
+                  </div>
+                  <div className="text-[11px] text-red-300 opacity-90 line-clamp-1">
+                    {pendingHighRecs[0].summary}
+                  </div>
+                </div>
+              </div>
+              <span className="text-[10px] uppercase tracking-wider font-extrabold bg-red-800 px-2.5 py-1 rounded-md shrink-0">
+                {pendingHighRecs[0].confidenceScore}% Confidence
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Climate & Risk Bento Cards (5 Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">

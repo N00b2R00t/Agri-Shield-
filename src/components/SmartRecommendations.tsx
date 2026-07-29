@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Recommendation, RecommendationType, PriorityLevel } from '../types';
+import { Recommendation, RecommendationType, PriorityLevel, Farm } from '../types';
 import {
   Sparkles,
   CheckCircle,
@@ -18,20 +18,25 @@ import {
   ShieldCheck,
   Check,
   X,
+  Sprout as FarmIcon,
 } from 'lucide-react';
 
 interface SmartRecommendationsProps {
+  farm?: Farm | null;
   recommendations: Recommendation[];
   onStatusChange: (id: string, newStatus: 'accepted' | 'completed' | 'dismissed') => void;
   onRefreshAI: () => void;
   isGeneratingAI: boolean;
+  onOpenNewFarmModal?: () => void;
 }
 
 export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
+  farm,
   recommendations,
   onStatusChange,
   onRefreshAI,
   isGeneratingAI,
+  onOpenNewFarmModal,
 }) => {
   const [filterType, setFilterType] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(recommendations[0]?.id || null);

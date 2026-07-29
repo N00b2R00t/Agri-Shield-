@@ -60,11 +60,11 @@ export const AdminExtensionDashboard: React.FC<AdminExtensionDashboardProps> = (
     setBroadcastMessage('');
   };
 
-  const filteredFarms = farms.filter((f) => {
+  const filteredFarms = (farms || []).filter((f) => {
     const matchesSearch =
-      f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.county.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.cropType.toLowerCase().includes(searchTerm.toLowerCase());
+      (f.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (f.county || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (f.cropType || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCounty = selectedCounty === 'all' || f.county === selectedCounty;
     return matchesSearch && matchesCounty;
   });

@@ -413,6 +413,14 @@ export default function App() {
     await saveFarmToDb(updatedFarm);
   };
 
+  // Handle update user profile
+  const handleUpdateUser = (updatedProps: Partial<UserProfile>) => {
+    const updated = { ...user, ...updatedProps };
+    setUser(updated);
+    localStorage.setItem('agrishield_session_user', JSON.stringify(updated));
+    setUsersList((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+  };
+
   // Broadcast Alert from Extension Officer & persist to Firestore
   const handleSendBroadcast = async (title: string, message: string) => {
     const newNotif: AlertNotification = {
@@ -671,6 +679,10 @@ export default function App() {
         onSignOut={handleSignOut}
         theme={theme}
         onThemeChange={setTheme}
+        onUpdateUser={handleUpdateUser}
+        usersList={usersList}
+        onUpdateUsersList={setUsersList}
+        onSendSystemBroadcast={(title, message) => handleSendBroadcast(title, message)}
       />
 
       <DocumentationModal

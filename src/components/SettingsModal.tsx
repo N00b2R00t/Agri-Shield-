@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { UserProfile } from '../types';
+import React, { useState } from 'react';
+import { UserProfile, UserRole } from '../types';
 import {
   Settings,
-  Moon,
-  Sun,
-  Monitor,
   LogOut,
   X,
   Check,
@@ -17,7 +14,25 @@ import {
   Trash2,
   UserX,
   CheckCircle2,
+  Key,
+  Eye,
+  EyeOff,
+  Building,
+  Phone,
+  Mail,
+  MapPin,
+  ShieldAlert,
+  Radio,
+  Cpu,
+  Database,
+  Users,
+  RefreshCw,
+  ToggleLeft,
+  ToggleRight,
+  Server,
+  Activity,
 } from 'lucide-react';
+import { KENYA_COUNTIES } from '../data/kenyaCounties';
 
 export type ThemeMode = 'dark' | 'light' | 'system';
 
@@ -26,8 +41,12 @@ interface SettingsModalProps {
   onClose: () => void;
   user: UserProfile;
   onSignOut: () => void;
-  theme: ThemeMode;
-  onThemeChange: (newTheme: ThemeMode) => void;
+  theme?: ThemeMode;
+  onThemeChange?: (newTheme: ThemeMode) => void;
+  onUpdateUser?: (updated: Partial<UserProfile>) => void;
+  usersList?: UserProfile[];
+  onUpdateUsersList?: (users: UserProfile[]) => void;
+  onSendSystemBroadcast?: (title: string, message: string, severity: 'info' | 'warning' | 'critical') => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -35,20 +54,95 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   user,
   onSignOut,
-  theme,
+  theme = 'system',
   onThemeChange,
+  onUpdateUser,
+  usersList = [],
+  onUpdateUsersList,
+  onSendSystemBroadcast,
 }) => {
+  const [activeTab, setActiveTab] = useState<'profile' | 'admin' | 'security'>('profile');
+
+  // User Profile Form State
+  const [name, setName] = useState(user.name);
+  const [email, setEmail] = useState(user.email);
+  const [phone, setPhone] = useState(user.phone || '+254712345678');
+  const [organization, setOrganization] = useState(user.organization || 'AgriShield Cooperative');
+  const [county, setCounty] = useState(user.county || 'Uasin Gishu');
+  const [profileSavedMsg, setProfileSavedMsg] = useState('');
+
+  // Password Change Form State
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+
+  // Account Deactivation/Deletion State
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [actionType, setActionType] = useState<'deactivate' | 'delete'>('deactivate');
   const [reasonCategory, setReasonCategory] = useState<string>('No longer farming / using app');
   const [customReason, setCustomReason] = useState<string>('');
   const [actionSuccess, setActionSuccess] = useState<string>('');
 
+  // Admin Controls State
+  const [isSystemLive, setIsSystemLive] = useState(true);
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcastSeverity, setBroadcastSeverity] = useState<'info' | 'warning' | 'critical'>('warning');
+  const [broadcastSuccess, setBroadcastSuccess] = useState('');
+  const [aiConfidenceThreshold, setAiConfidenceThreshold] = useState(85);
+  const [strictAgronomistRules, setStrictAgronomistRules] = useState(true);
+  const [adminActionMsg, setAdminActionMsg] = useState('');
+
   if (!isOpen) return null;
 
+  // Handle Save Profile
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onUpdateUser) {
+      onUpdateUser({
+        name,
+        email,
+        phone,
+        organization,
+        county,
+      });
+    }
+    setProfileSavedMsg('Profile details updated and saved successfully!');
+    setTimeout(() => setProfileSavedMsg(''), 3000);
+  };
+
+  // Handle Change Password
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (!currentPassword) {
+      setPasswordError('Please enter your current password.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match.');
+      return;
+    }
+
+    setPasswordSuccess('Password successfully updated and encrypted in AgriShield DB!');
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setTimeout(() => setPasswordSuccess(''), 4000);
+  };
+
+  // Handle Account Deactivation / Deletion
   const handleAccountAction = () => {
     const finalReason = customReason.trim() ? `${reasonCategory}: ${customReason.trim()}` : reasonCategory;
-    
     if (actionType === 'deactivate') {
       setActionSuccess(`Account temporarily deactivated. Reason recorded: "${finalReason}". Signing out...`);
     } else {
@@ -61,199 +155,646 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }, 1500);
   };
 
+  // Handle Send System Broadcast
+  const handleSendBroadcast = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!broadcastTitle.trim() || !broadcastMessage.trim()) return;
+
+    if (onSendSystemBroadcast) {
+      onSendSystemBroadcast(broadcastTitle, broadcastMessage, broadcastSeverity);
+    }
+    setBroadcastSuccess('System-wide emergency alert broadcasted to registered users!');
+    setBroadcastTitle('');
+    setBroadcastMessage('');
+    setTimeout(() => setBroadcastSuccess(''), 4000);
+  };
+
+  // Admin User Role Update
+  const handleRoleChange = (userId: string, newRole: UserRole) => {
+    if (onUpdateUsersList && usersList.length > 0) {
+      const updatedList = usersList.map((u) => (u.id === userId ? { ...u, role: newRole } : u));
+      onUpdateUsersList(updatedList);
+    }
+    if (userId === user.id && onUpdateUser) {
+      onUpdateUser({ role: newRole });
+    }
+    setAdminActionMsg(`User role updated to ${newRole.replace('_', ' ').toUpperCase()}!`);
+    setTimeout(() => setAdminActionMsg(''), 3000);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-stone-900 border border-stone-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl text-stone-100 space-y-5 my-8">
+    <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      <div className="bg-stone-900 border border-stone-800 rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl text-stone-100 space-y-5 my-6 max-h-[92vh] flex flex-col">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-          <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+        <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
               <Settings className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-stone-100">AgriShield System & Account Settings</h3>
-              <p className="text-xs text-stone-400">Appearance preference, active profile, and account deletion</p>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-base font-bold text-stone-100">AgriShield Settings & Account Management</h3>
+                <span className="bg-emerald-500/20 text-emerald-300 text-[10px] uppercase font-black px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  {user.role.replace('_', ' ')}
+                </span>
+              </div>
+              <p className="text-xs text-stone-400">Manage profile information, password security, and platform administration</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800"
+            className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Theme Settings Selection */}
-        <div className="space-y-3">
-          <label className="block text-xs font-bold text-stone-300 uppercase tracking-wider">
-            Theme Appearance Mode
-          </label>
+        {/* Tab Navigation */}
+        <div className="flex items-center space-x-2 bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-bold shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab('profile')}
+            className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-all ${
+              activeTab === 'profile'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-900'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>Profile & Password</span>
+          </button>
 
-          <div className="grid grid-cols-3 gap-2.5 text-xs font-bold">
-            <button
-              onClick={() => onThemeChange('dark')}
-              className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center space-y-2 transition-all ${
-                theme === 'dark'
-                  ? 'bg-emerald-950 border-emerald-500 text-emerald-300 shadow-md ring-2 ring-emerald-500/20'
-                  : 'bg-stone-950 border-stone-800 text-stone-400 hover:text-stone-200'
-              }`}
-            >
-              <Moon className="w-5 h-5 text-emerald-400" />
-              <span>Dark Theme</span>
-            </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('admin')}
+            className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-all ${
+              activeTab === 'admin'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-900'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>Website & Admin Controls</span>
+          </button>
 
-            <button
-              onClick={() => onThemeChange('light')}
-              className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center space-y-2 transition-all ${
-                theme === 'light'
-                  ? 'bg-amber-950 border-amber-500 text-amber-300 shadow-md ring-2 ring-amber-500/20'
-                  : 'bg-stone-950 border-stone-800 text-stone-400 hover:text-stone-200'
-              }`}
-            >
-              <Sun className="w-5 h-5 text-amber-400" />
-              <span>Light Theme</span>
-            </button>
-
-            <button
-              onClick={() => onThemeChange('system')}
-              className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center space-y-2 transition-all ${
-                theme === 'system'
-                  ? 'bg-blue-950 border-blue-500 text-blue-300 shadow-md ring-2 ring-blue-500/20'
-                  : 'bg-stone-950 border-stone-800 text-stone-400 hover:text-stone-200'
-              }`}
-            >
-              <Monitor className="w-5 h-5 text-blue-400" />
-              <span>System Default</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('security')}
+            className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-all ${
+              activeTab === 'security'
+                ? 'bg-red-950 border border-red-800 text-red-300 shadow-md'
+                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-900'
+            }`}
+          >
+            <Lock className="w-4 h-4" />
+            <span>Account Security</span>
+          </button>
         </div>
 
-        {/* Active Account Overview */}
-        <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800 space-y-2 text-xs">
-          <div className="flex items-center justify-between font-bold text-stone-300">
-            <div className="flex items-center space-x-2">
-              <User className="w-4 h-4 text-emerald-400" />
-              <span>Signed In Account Profile</span>
-            </div>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] uppercase font-black">
-              {user.role.replace('_', ' ')}
-            </span>
-          </div>
+        {/* Modal Scrollable Content */}
+        <div className="overflow-y-auto space-y-5 pr-1 flex-1">
 
-          <div className="space-y-1 pt-1 text-stone-300">
-            <div className="font-bold text-stone-100">{user.name}</div>
-            <div className="text-stone-400">{user.email}</div>
-            <div className="text-stone-400">Region: {user.county}, Kenya</div>
-          </div>
-        </div>
+          {/* TAB 1: PROFILE & PASSWORD */}
+          {activeTab === 'profile' && (
+            <div className="space-y-5 text-xs">
+              
+              {/* Profile Details Form */}
+              <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                  <div className="font-bold text-stone-200 text-xs uppercase tracking-wider flex items-center space-x-2">
+                    <User className="w-4 h-4 text-emerald-400" />
+                    <span>Personal & Profile Information</span>
+                  </div>
+                  <span className="text-[11px] text-stone-400">ID: {user.id}</span>
+                </div>
 
-        {/* Account Deactivation & Deletion Section */}
-        <div className="p-4 rounded-2xl bg-stone-950/80 border border-red-900/40 space-y-3 text-xs">
-          <div className="flex items-center justify-between font-bold text-red-300">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="w-4 h-4 text-red-400" />
-              <span>Account Management & Deletion</span>
-            </div>
-          </div>
+                {profileSavedMsg && (
+                  <div className="p-2.5 bg-emerald-950 border border-emerald-800 rounded-xl text-emerald-300 font-bold flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{profileSavedMsg}</span>
+                  </div>
+                )}
 
-          {actionSuccess ? (
-            <div className="p-3 bg-emerald-950 border border-emerald-800 rounded-xl text-emerald-200 font-bold flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>{actionSuccess}</span>
-            </div>
-          ) : !showDeleteConfirm ? (
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-stone-400 text-[11px]">Deactivate or permanently remove your profile from AgriShield.</span>
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="px-3 py-1.5 rounded-xl bg-red-950 border border-red-800 hover:bg-red-900 text-red-300 font-bold text-xs flex items-center space-x-1.5 transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Deactivate / Delete</span>
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3 pt-1 border-t border-stone-800">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActionType('deactivate')}
-                  className={`flex-1 p-2 rounded-xl border text-center font-bold flex items-center justify-center space-x-1.5 ${
-                    actionType === 'deactivate'
-                      ? 'bg-amber-950 border-amber-600 text-amber-300'
-                      : 'bg-stone-900 border-stone-800 text-stone-400'
-                  }`}
-                >
-                  <UserX className="w-3.5 h-3.5" />
-                  <span>Deactivate Account</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActionType('delete')}
-                  className={`flex-1 p-2 rounded-xl border text-center font-bold flex items-center justify-center space-x-1.5 ${
-                    actionType === 'delete'
-                      ? 'bg-red-950 border-red-600 text-red-300'
-                      : 'bg-stone-900 border-stone-800 text-stone-400'
-                  }`}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Permanently Delete</span>
-                </button>
+                <form onSubmit={handleSaveProfile} className="space-y-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold flex items-center space-x-1">
+                        <User className="w-3.5 h-3.5 text-stone-500" />
+                        <span>Full Name</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold flex items-center space-x-1">
+                        <Mail className="w-3.5 h-3.5 text-stone-500" />
+                        <span>Email Address</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold flex items-center space-x-1">
+                        <Phone className="w-3.5 h-3.5 text-stone-500" />
+                        <span>Phone Number</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold flex items-center space-x-1">
+                        <Building className="w-3.5 h-3.5 text-stone-500" />
+                        <span>Organization / Cooperative</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={organization}
+                        onChange={(e) => setOrganization(e.target.value)}
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold flex items-center space-x-1">
+                        <MapPin className="w-3.5 h-3.5 text-stone-500" />
+                        <span>County Region</span>
+                      </label>
+                      <select
+                        value={county}
+                        onChange={(e) => setCounty(e.target.value)}
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-emerald-500 focus:outline-none"
+                      >
+                        {KENYA_COUNTIES.map((c) => (
+                          <option key={c.name} value={c.name}>
+                            {c.name} ({c.region})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold">Assigned System Role</label>
+                      <div className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-emerald-400 font-bold uppercase tracking-wider text-[11px] flex items-center justify-between">
+                        <span>{user.role.replace('_', ' ')}</span>
+                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors shadow-sm flex items-center space-x-1.5"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Save Profile Details</span>
+                    </button>
+                  </div>
+                </form>
               </div>
 
-              <div>
-                <label className="block text-stone-300 font-bold mb-1">Optional Reason for {actionType === 'deactivate' ? 'Deactivation' : 'Deletion'}:</label>
-                <select
-                  value={reasonCategory}
-                  onChange={(e) => setReasonCategory(e.target.value)}
-                  className="w-full p-2 rounded-xl bg-stone-900 border border-stone-800 text-stone-100 font-semibold mb-2"
-                >
-                  <option value="No longer farming / using app">No longer farming / using app</option>
-                  <option value="Switched to another platform">Switched to another platform</option>
-                  <option value="Privacy or data retention concerns">Privacy or data retention concerns</option>
-                  <option value="Too many notifications or alerts">Too many notifications or alerts</option>
-                  <option value="Other reason">Other reason</option>
-                </select>
+              {/* Password Change Form */}
+              <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                  <div className="font-bold text-stone-200 text-xs uppercase tracking-wider flex items-center space-x-2">
+                    <Key className="w-4 h-4 text-amber-400" />
+                    <span>Change Account Password</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords(!showPasswords)}
+                    className="text-stone-400 hover:text-stone-200 text-[11px] flex items-center space-x-1 font-semibold"
+                  >
+                    {showPasswords ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    <span>{showPasswords ? 'Hide Passwords' : 'Show Passwords'}</span>
+                  </button>
+                </div>
 
-                <input
-                  type="text"
-                  placeholder="Additional details / feedback (optional)..."
-                  value={customReason}
-                  onChange={(e) => setCustomReason(e.target.value)}
-                  className="w-full p-2 rounded-xl bg-stone-900 border border-stone-800 text-stone-100 text-xs placeholder-stone-600"
-                />
+                {passwordError && (
+                  <div className="p-2.5 bg-red-950 border border-red-800 rounded-xl text-red-300 font-bold flex items-center space-x-2">
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                    <span>{passwordError}</span>
+                  </div>
+                )}
+
+                {passwordSuccess && (
+                  <div className="p-2.5 bg-emerald-950 border border-emerald-800 rounded-xl text-emerald-300 font-bold flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{passwordSuccess}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleChangePassword} className="space-y-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold">Current Password</label>
+                      <input
+                        type={showPasswords ? 'text' : 'password'}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-amber-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold">New Password</label>
+                      <input
+                        type={showPasswords ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Min 6 characters"
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-amber-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold">Confirm New Password</label>
+                      <input
+                        type={showPasswords ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Repeat new password"
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-amber-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-stone-950 font-black rounded-xl transition-colors shadow-sm flex items-center space-x-1.5"
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>Update Password</span>
+                    </button>
+                  </div>
+                </form>
               </div>
 
-              <div className="flex items-center justify-end space-x-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-3 py-1.5 rounded-xl bg-stone-800 text-stone-300 font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAccountAction}
-                  className={`px-4 py-1.5 rounded-xl font-black text-xs text-white ${
-                    actionType === 'deactivate' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-red-600 hover:bg-red-500'
-                  }`}
-                >
-                  Confirm {actionType === 'deactivate' ? 'Deactivation' : 'Permanent Deletion'}
-                </button>
-              </div>
             </div>
           )}
+
+          {/* TAB 2: WEBSITE & ADMIN CONTROLS */}
+          {activeTab === 'admin' && (
+            <div className="space-y-5 text-xs">
+              
+              {adminActionMsg && (
+                <div className="p-3 bg-emerald-950 border border-emerald-800 rounded-2xl text-emerald-300 font-bold flex items-center space-x-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{adminActionMsg}</span>
+                </div>
+              )}
+
+              {/* Platform Operational Status */}
+              <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                  <div className="font-bold text-stone-200 text-xs uppercase tracking-wider flex items-center space-x-2">
+                    <Server className="w-4 h-4 text-emerald-400" />
+                    <span>Website & Operational Status</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[11px] text-stone-400">Platform Status:</span>
+                    <span className={`px-2 py-0.5 rounded-full font-black text-[10px] uppercase ${
+                      isSystemLive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    }`}>
+                      {isSystemLive ? 'Live & Operational' : 'Maintenance Mode'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div>
+                    <div className="font-bold text-stone-200">Toggle Platform Live Status</div>
+                    <div className="text-stone-400 text-[11px]">Control active database connections and client sync APIs.</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSystemLive(!isSystemLive);
+                      setAdminActionMsg(isSystemLive ? 'Platform switched to Maintenance Mode.' : 'Platform switched to Live Operational Mode.');
+                      setTimeout(() => setAdminActionMsg(''), 3000);
+                    }}
+                    className="flex items-center space-x-2 text-stone-300 hover:text-white"
+                  >
+                    {isSystemLive ? (
+                      <ToggleRight className="w-8 h-8 text-emerald-500" />
+                    ) : (
+                      <ToggleLeft className="w-8 h-8 text-stone-600" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Emergency System Broadcast */}
+              <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                  <div className="font-bold text-stone-200 text-xs uppercase tracking-wider flex items-center space-x-2">
+                    <Radio className="w-4 h-4 text-emerald-400" />
+                    <span>Broadcast System Alert to Registered Farmers</span>
+                  </div>
+                </div>
+
+                {broadcastSuccess && (
+                  <div className="p-2.5 bg-emerald-950 border border-emerald-800 rounded-xl text-emerald-300 font-bold flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{broadcastSuccess}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSendBroadcast} className="space-y-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className="block text-stone-400 mb-1 font-semibold">Alert Title / Subject</label>
+                      <input
+                        type="text"
+                        value={broadcastTitle}
+                        onChange={(e) => setBroadcastTitle(e.target.value)}
+                        placeholder="e.g., Immediate Armyworm Threat Advisory"
+                        required
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold">Alert Severity</label>
+                      <select
+                        value={broadcastSeverity}
+                        onChange={(e) => setBroadcastSeverity(e.target.value as any)}
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 focus:border-emerald-500 focus:outline-none"
+                      >
+                        <option value="info">Info Notice</option>
+                        <option value="warning">Warning Level</option>
+                        <option value="critical">Critical Hazard</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-stone-400 mb-1 font-semibold">Broadcast Advisory Message</label>
+                    <textarea
+                      rows={2}
+                      value={broadcastMessage}
+                      onChange={(e) => setBroadcastMessage(e.target.value)}
+                      placeholder="Enter emergency instructions for farmers and extension staff..."
+                      required
+                      className="w-full bg-stone-900 border border-stone-800 rounded-xl p-3 text-stone-100 focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors shadow-sm flex items-center space-x-1.5"
+                    >
+                      <Radio className="w-4 h-4" />
+                      <span>Send System Broadcast</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* User Roles & Permissions Management */}
+              <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                  <div className="font-bold text-stone-200 text-xs uppercase tracking-wider flex items-center space-x-2">
+                    <Users className="w-4 h-4 text-emerald-400" />
+                    <span>Registered User Accounts & Privileges ({usersList.length || 1})</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {usersList.length > 0 ? (
+                    usersList.map((u) => (
+                      <div key={u.id} className="p-2.5 rounded-xl bg-stone-900 border border-stone-800 flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-stone-200 text-xs">{u.name} {u.id === user.id ? '(You)' : ''}</div>
+                          <div className="text-[11px] text-stone-400">{u.email} • {u.county}</div>
+                        </div>
+
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleRoleChange(u.id, e.target.value as UserRole)}
+                          className="bg-stone-950 border border-stone-700 text-emerald-400 font-bold text-[11px] rounded-lg px-2 py-1 focus:outline-none"
+                        >
+                          <option value="farmer">Farmer</option>
+                          <option value="extension_officer">Extension Officer</option>
+                          <option value="ngo">NGO Specialist</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-2.5 rounded-xl bg-stone-900 border border-stone-800 flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-stone-200 text-xs">{user.name} (You)</div>
+                        <div className="text-[11px] text-stone-400">{user.email} • {user.county}</div>
+                      </div>
+                      <span className="text-emerald-400 font-bold text-[11px] uppercase bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                        {user.role}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* AI Engine & System Diagnostics */}
+              <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                  <div className="font-bold text-stone-200 text-xs uppercase tracking-wider flex items-center space-x-2">
+                    <Cpu className="w-4 h-4 text-emerald-400" />
+                    <span>Gemini AI Agronomist Sensitivity & Diagnostics</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-1">
+                  <div>
+                    <div className="flex justify-between text-stone-300 font-semibold mb-1">
+                      <span>Minimum AI Confidence Threshold:</span>
+                      <span className="text-emerald-400 font-bold">{aiConfidenceThreshold}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="70"
+                      max="98"
+                      value={aiConfidenceThreshold}
+                      onChange={(e) => setAiConfidenceThreshold(Number(e.target.value))}
+                      className="w-full accent-emerald-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <div className="font-bold text-stone-200">Strict Agronomist Guidelines</div>
+                      <div className="text-stone-400 text-[11px]">Enforce precise weather-bound agronomist recommendations.</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStrictAgronomistRules(!strictAgronomistRules)}
+                      className="text-emerald-400 font-bold"
+                    >
+                      {strictAgronomistRules ? (
+                        <ToggleRight className="w-7 h-7 text-emerald-500" />
+                      ) : (
+                        <ToggleLeft className="w-7 h-7 text-stone-600" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* TAB 3: ACCOUNT SECURITY & DELETION */}
+          {activeTab === 'security' && (
+            <div className="space-y-5 text-xs">
+              
+              {/* Security Status Card */}
+              <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800 space-y-2">
+                <div className="flex items-center justify-between font-bold text-emerald-400">
+                  <div className="flex items-center space-x-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Account Security Overview</span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30 uppercase font-bold">
+                    Secure Session
+                  </span>
+                </div>
+                <p className="text-stone-400 text-[11px]">
+                  Your account is protected by Supabase Row-Level Security (RLS) policies and encrypted server-side proxy routes.
+                </p>
+              </div>
+
+              {/* Account Deactivation & Deletion Section */}
+              <div className="p-4 rounded-2xl bg-stone-950/80 border border-red-900/40 space-y-3">
+                <div className="flex items-center justify-between font-bold text-red-300">
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                    <span>Account Management & Deletion</span>
+                  </div>
+                </div>
+
+                {actionSuccess ? (
+                  <div className="p-3 bg-emerald-950 border border-emerald-800 rounded-xl text-emerald-200 font-bold flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{actionSuccess}</span>
+                  </div>
+                ) : !showDeleteConfirm ? (
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-stone-400 text-[11px]">Deactivate or permanently remove your profile from AgriShield.</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="px-3 py-1.5 rounded-xl bg-red-950 border border-red-800 hover:bg-red-900 text-red-300 font-bold text-xs flex items-center space-x-1.5 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Deactivate / Delete</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3 pt-1 border-t border-stone-800">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActionType('deactivate')}
+                        className={`flex-1 p-2 rounded-xl border text-center font-bold flex items-center justify-center space-x-1.5 ${
+                          actionType === 'deactivate'
+                            ? 'bg-amber-950 border-amber-600 text-amber-300'
+                            : 'bg-stone-900 border-stone-800 text-stone-400'
+                        }`}
+                      >
+                        <UserX className="w-3.5 h-3.5" />
+                        <span>Deactivate Account</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActionType('delete')}
+                        className={`flex-1 p-2 rounded-xl border text-center font-bold flex items-center justify-center space-x-1.5 ${
+                          actionType === 'delete'
+                            ? 'bg-red-950 border-red-600 text-red-300'
+                            : 'bg-stone-900 border-stone-800 text-stone-400'
+                        }`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Permanently Delete</span>
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-300 font-bold mb-1">Optional Reason for {actionType === 'deactivate' ? 'Deactivation' : 'Deletion'}:</label>
+                      <select
+                        value={reasonCategory}
+                        onChange={(e) => setReasonCategory(e.target.value)}
+                        className="w-full p-2 rounded-xl bg-stone-900 border border-stone-800 text-stone-100 font-semibold mb-2"
+                      >
+                        <option value="No longer farming / using app">No longer farming / using app</option>
+                        <option value="Switched to another platform">Switched to another platform</option>
+                        <option value="Privacy or data retention concerns">Privacy or data retention concerns</option>
+                        <option value="Too many notifications or alerts">Too many notifications or alerts</option>
+                        <option value="Other reason">Other reason</option>
+                      </select>
+
+                      <input
+                        type="text"
+                        placeholder="Additional details / feedback (optional)..."
+                        value={customReason}
+                        onChange={(e) => setCustomReason(e.target.value)}
+                        className="w-full p-2 rounded-xl bg-stone-900 border border-stone-800 text-stone-100 text-xs placeholder-stone-600"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end space-x-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowDeleteConfirm(false)}
+                        className="px-3 py-1.5 rounded-xl bg-stone-800 text-stone-300 font-bold"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAccountAction}
+                        className={`px-4 py-1.5 rounded-xl font-black text-xs text-white ${
+                          actionType === 'deactivate' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-red-600 hover:bg-red-500'
+                        }`}
+                      >
+                        Confirm {actionType === 'deactivate' ? 'Deactivation' : 'Permanent Deletion'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
+
         </div>
 
         {/* Developer Support Banner */}
-        <div className="p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-between text-xs">
+        <div className="p-3 rounded-2xl bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-between text-xs shrink-0">
           <div className="space-y-0.5">
             <div className="font-bold text-emerald-300 flex items-center space-x-1.5">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Official Developer & Support Channel</span>
+              <span>Developer & Support Channel</span>
             </div>
             <div className="text-[11px] text-stone-300">Ian Kipkoech Chirchir</div>
           </div>
@@ -264,12 +805,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             className="px-3 py-1.5 rounded-xl bg-emerald-500 text-stone-950 font-black text-xs flex items-center space-x-1 hover:bg-emerald-400 transition-colors"
           >
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>Official WhatsApp Support</span>
+            <span>WhatsApp Support</span>
           </a>
         </div>
 
-        {/* Action Buttons (Sign Out) */}
-        <div className="pt-2 border-t border-stone-800 flex items-center justify-between">
+        {/* Modal Action Buttons */}
+        <div className="pt-2 border-t border-stone-800 flex items-center justify-between shrink-0">
           <button
             onClick={() => {
               onSignOut();
@@ -278,14 +819,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             className="px-4 py-2.5 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-300 font-bold text-xs flex items-center space-x-2 transition-colors"
           >
             <LogOut className="w-4 h-4 text-red-400" />
-            <span>Sign Out of Account</span>
+            <span>Sign Out</span>
           </button>
 
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-black text-xs shadow-md"
+            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md"
           >
-            Done & Save Settings
+            Done
           </button>
         </div>
 

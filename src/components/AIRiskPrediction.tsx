@@ -1,12 +1,13 @@
 import React from 'react';
 import { DiseaseRiskPrediction } from '../types';
-import { Bug, Wind, Thermometer, ShieldAlert, AlertTriangle, ArrowRight, Zap } from 'lucide-react';
+import { Bug, Wind, Thermometer, ShieldAlert, AlertTriangle, ArrowRight, Zap, Trash2 } from 'lucide-react';
 
 interface AIRiskPredictionProps {
   predictions: DiseaseRiskPrediction[];
+  onDeletePrediction?: (id: string) => void;
 }
 
-export const AIRiskPrediction: React.FC<AIRiskPredictionProps> = ({ predictions }) => {
+export const AIRiskPrediction: React.FC<AIRiskPredictionProps> = ({ predictions, onDeletePrediction }) => {
   return (
     <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 space-y-5">
       
@@ -66,13 +67,24 @@ export const AIRiskPrediction: React.FC<AIRiskPredictionProps> = ({ predictions 
                   </h3>
                 </div>
 
-                <div className="text-right">
-                  <div className="text-2xl font-black text-red-600">
-                    {p.outbreakProbabilityNext7Days}%
+                <div className="flex items-center space-x-3">
+                  <div className="text-right">
+                    <div className="text-2xl font-black text-red-600">
+                      {p.outbreakProbabilityNext7Days}%
+                    </div>
+                    <div className="text-[10px] text-stone-500 font-bold uppercase">
+                      7-Day Outbreak Probability
+                    </div>
                   </div>
-                  <div className="text-[10px] text-stone-500 font-bold uppercase">
-                    7-Day Outbreak Probability
-                  </div>
+                  {onDeletePrediction && (
+                    <button
+                      onClick={() => onDeletePrediction(p.id)}
+                      className="p-2 rounded-xl text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      title="Dismiss/Delete Risk Alert"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -128,6 +140,16 @@ export const AIRiskPrediction: React.FC<AIRiskPredictionProps> = ({ predictions 
             </div>
           );
         })}
+
+        {predictions.length === 0 && (
+          <div className="text-center py-10 bg-stone-50 rounded-2xl border border-dashed border-stone-200 space-y-3">
+            <Bug className="w-8 h-8 text-emerald-500 mx-auto opacity-60" />
+            <h3 className="text-sm font-bold text-stone-800">No Active Pathogen or Vector Outbreak Threats</h3>
+            <p className="text-xs text-stone-500 max-w-sm mx-auto">
+              Your registered sector is currently free from biosecurity threats. The AI model monitors micro-climate data 24/7.
+            </p>
+          </div>
+        )}
       </div>
 
     </div>

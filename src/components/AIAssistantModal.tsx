@@ -15,7 +15,7 @@ import {
 interface AIAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
-  farm: Farm;
+  farm?: Farm | null;
   weather: WeatherSummary;
   reports: CommunityReport[];
 }
@@ -27,14 +27,19 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   weather,
   reports,
 }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const farmName = farm?.name || 'Your Farm Sector';
+  const cropType = farm?.cropType || 'Crops & Livestock';
+  const growthStage = farm?.growthStage || 'Active Season';
+  const locationName = farm?.locationName || 'Kenya';
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: 'msg-0',
       sender: 'ai',
-      text: `Jambo Samuel! I am your AgriShield AI Agronomist. I have reviewed ${farm.name} (${farm.cropType}, ${farm.growthStage}) in ${farm.locationName}.\n\nWith today's forecast showing **${weather.rainfallMm}mm rain (${weather.rainfallProb}% chance)** and humidity at **${weather.humidity}%**, how can I assist your farming decisions today?`,
+      text: `Jambo Farmer! I am your AgriShield AI Agronomist. I have reviewed ${farmName} (${cropType}, ${growthStage}) in ${locationName}.\n\nWith today's forecast showing **${weather.rainfallMm}mm rain (${weather.rainfallProb}% chance)** and humidity at **${weather.humidity}%**, how can I assist your farming decisions today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       quickActions: [
-        `Should I irrigate my ${farm.cropType} today?`,
+        `Should I irrigate my ${cropType} today?`,
         `When should I top-dress nitrogen fertilizer?`,
         `Nearby Armyworm reported: how do I protect my field?`,
         `Should I harvest early before the heavy downpour?`,
@@ -127,7 +132,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-stone-400">
-                Aware of {farm.name} • {farm.cropType} • {weather.currentTemp}°C Rain: {weather.rainfallMm}mm
+                Aware of {farmName} • {cropType} • {weather.currentTemp}°C Rain: {weather.rainfallMm}mm
               </p>
             </div>
           </div>
@@ -197,7 +202,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
           {isLoading && (
             <div className="flex items-center space-x-2 text-stone-400 text-xs italic">
               <Sparkles className="w-4 h-4 text-emerald-400 animate-spin" />
-              <span>Analyzing climate models and soil moisture for {farm.cropType}...</span>
+              <span>Analyzing climate models and soil moisture for {cropType}...</span>
             </div>
           )}
 
@@ -217,7 +222,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
               type="text"
               value={inputQuestion}
               onChange={(e) => setInputQuestion(e.target.value)}
-              placeholder={`Ask Gemini about ${farm.cropType}, rainfall, fertilizer, or armyworm protection...`}
+              placeholder={`Ask Gemini about ${cropType}, rainfall, fertilizer, or armyworm protection...`}
               className="flex-1 bg-stone-900 border border-stone-700 rounded-xl px-3.5 py-2.5 text-xs text-stone-100 placeholder-stone-500 focus:outline-none focus:border-emerald-500"
             />
             <button

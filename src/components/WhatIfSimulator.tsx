@@ -16,12 +16,12 @@ import {
 } from 'lucide-react';
 
 interface WhatIfSimulatorProps {
-  farm: Farm;
+  farm?: Farm | null;
 }
 
 export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({ farm }) => {
   const [input, setInput] = useState<WhatIfInput>({
-    cropType: farm.cropType,
+    cropType: farm ? farm.cropType : 'Maize',
     plantingDateOffsetDays: 4, // default delay 4 days as recommended
     irrigationLevelPercent: 80,
     fertilizerKgPerHa: 50,

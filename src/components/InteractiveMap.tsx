@@ -6,7 +6,7 @@ import { MapPin, Layers, Bug, CloudRain, AlertTriangle, Store, Plus, Check, Sear
 import { KENYA_COUNTIES, KenyaCounty } from '../data/kenyaCounties';
 
 interface InteractiveMapProps {
-  activeFarm: Farm;
+  activeFarm?: Farm | null;
   farms: Farm[];
   reports: CommunityReport[];
   markets: MarketPrice[];
@@ -55,8 +55,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
 
     // Initialize Leaflet Map
-    const initialLat = activeCountyObj ? activeCountyObj.lat : activeFarm.lat;
-    const initialLng = activeCountyObj ? activeCountyObj.lng : activeFarm.lng;
+    const initialLat = activeCountyObj ? activeCountyObj.lat : (activeFarm ? activeFarm.lat : 0.5143);
+    const initialLng = activeCountyObj ? activeCountyObj.lng : (activeFarm ? activeFarm.lng : 35.2698);
 
     const map = L.map(mapContainerRef.current, {
       center: [initialLat, initialLng],
@@ -83,7 +83,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     // 1. Draw Active Farm Polygon & Marker
     if (showBoundaries) {
       farms.forEach((f) => {
-        const isCurrent = f.id === activeFarm.id;
+        const isCurrent = activeFarm && f.id === activeFarm.id;
         if (f.boundaryCoordinates && f.boundaryCoordinates.length >= 3) {
           const poly = L.polygon(f.boundaryCoordinates as L.LatLngTuple[], {
             color: isCurrent ? '#10b981' : '#6b7280',

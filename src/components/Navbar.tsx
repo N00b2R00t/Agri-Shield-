@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Trash2,
 } from 'lucide-react';
 import { Farm, UserRole, UserProfile, AlertNotification } from '../types';
 import { KENYA_COUNTIES, getCountyByName } from '../data/kenyaCounties';
@@ -34,9 +35,10 @@ export interface NavTabItem {
 
 interface NavbarProps {
   user: UserProfile;
-  activeFarm: Farm;
+  activeFarm?: Farm | null;
   farms: Farm[];
   onSelectFarm: (farm: Farm) => void;
+  onDeleteFarm?: (id: string) => void;
   onChangeRole: (role: UserRole) => void;
   onOpenNewFarmModal: () => void;
   onOpenProfileModal: () => void;
@@ -56,6 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeFarm,
   farms,
   onSelectFarm,
+  onDeleteFarm,
   onChangeRole,
   onOpenNewFarmModal,
   onOpenProfileModal,
@@ -75,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const userCountyObj = getCountyByName(user.county || activeFarm.county);
+  const userCountyObj = getCountyByName(user.county || (activeFarm ? activeFarm.county : 'Uasin Gishu'));
 
   const roleLabels: Record<UserRole, { label: string; bg: string; text: string }> = {
     farmer: { label: 'Smallholder Farmer', bg: 'bg-emerald-100 text-emerald-800 border-emerald-300', text: 'text-emerald-700' },
@@ -120,9 +123,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Sprout className="w-4 h-4 text-emerald-400 shrink-0" />
               <div className="text-left max-w-[150px] lg:max-w-[210px] truncate">
-                <div className="truncate font-bold text-stone-100">{activeFarm.name}</div>
+                <div className="truncate font-bold text-stone-100">
+                  {activeFarm ? activeFarm.name : 'No Farm Registered'}
+                </div>
                 <div className="text-[10px] text-stone-400 truncate">
-                  {activeFarm.cropType} • {activeFarm.county} County
+                  {activeFarm ? `${activeFarm.cropType} • ${activeFarm.county} County` : 'Click to register farm'}
                 </div>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-stone-400 shrink-0" />
@@ -135,28 +140,44 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-[10px] text-emerald-400 font-mono">{farms.length} Active</span>
                 </div>
                 {farms.map((f) => (
-                  <button
+                  <div
                     key={f.id}
-                    onClick={() => {
-                      onSelectFarm(f);
-                      setShowFarmDropdown(false);
-                    }}
-                    className={`w-full text-left px-3.5 py-2 flex items-center justify-between hover:bg-stone-800 transition-colors ${
-                      f.id === activeFarm.id ? 'bg-emerald-950/60 border-l-3 border-emerald-400' : ''
+                    className={`w-full px-3.5 py-2 flex items-center justify-between hover:bg-stone-800 transition-colors ${
+                      activeFarm && f.id === activeFarm.id ? 'bg-emerald-950/60 border-l-3 border-emerald-400' : ''
                     }`}
                   >
-                    <div className="truncate pr-2">
+                    <button
+                      onClick={() => {
+                        onSelectFarm(f);
+                        setShowFarmDropdown(false);
+                      }}
+                      className="text-left flex-1 truncate pr-2"
+                    >
                       <div className="text-xs font-bold text-stone-200 truncate">{f.name}</div>
                       <div className="text-[11px] text-stone-400 truncate">
                         {f.cropType} • {f.county} ({f.areaHectares} ha)
                       </div>
+                    </button>
+                    <div className="flex items-center space-x-1 shrink-0">
+                      {activeFarm && f.id === activeFarm.id && (
+                        <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-black">
+                          Active
+                        </span>
+                      )}
+                      {onDeleteFarm && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteFarm(f.id);
+                          }}
+                          className="p-1 text-stone-400 hover:text-red-400 rounded transition-colors"
+                          title="Delete farm record"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
-                    {f.id === activeFarm.id && (
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-black shrink-0">
-                        Active
-                      </span>
-                    )}
-                  </button>
+                  </div>
                 ))}
 
                 <div className="border-t border-stone-800 mt-1 pt-1.5 px-2.5 space-y-1">
@@ -367,7 +388,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="text-xs font-extrabold text-stone-100 truncate">{user.name}</div>
                   <div className="text-[11px] text-emerald-400 font-semibold flex items-center space-x-1">
                     <MapPin className="w-3 h-3" />
-                    <span>{user.county || activeFarm.county} County</span>
+                    <span>{user.county || (activeFarm ? activeFarm.county : 'Uasin Gishu')} County</span>
                     {userCountyObj && <span className="text-[10px] text-stone-400">({userCountyObj.code})</span>}
                   </div>
                 </div>
@@ -444,7 +465,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setShowMobileMenu(false);
                     }}
                     className={`w-full text-left p-2.5 rounded-xl border text-xs flex items-center justify-between ${
-                      f.id === activeFarm.id
+                      activeFarm && f.id === activeFarm.id
                         ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 font-bold'
                         : 'bg-stone-900 border-stone-800 text-stone-300'
                     }`}
@@ -455,7 +476,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         {f.cropType} • {f.county} ({f.areaHectares} ha)
                       </div>
                     </div>
-                    {f.id === activeFarm.id && (
+                    {activeFarm && f.id === activeFarm.id && (
                       <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-black shrink-0">
                         Active
                       </span>

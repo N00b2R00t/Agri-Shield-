@@ -11,6 +11,7 @@ import {
   Filter,
   Camera,
   CheckCircle,
+  Trash2,
 } from 'lucide-react';
 
 interface CommunityIntelProps {
@@ -20,6 +21,7 @@ interface CommunityIntelProps {
   onVerifyReport: (id: string) => void;
   isExtensionOfficer: boolean;
   onRequestOpenMapWithReport: (report: CommunityReport) => void;
+  onDeleteReport?: (id: string) => void;
 }
 
 export const CommunityIntel: React.FC<CommunityIntelProps> = ({
@@ -29,6 +31,7 @@ export const CommunityIntel: React.FC<CommunityIntelProps> = ({
   onVerifyReport,
   isExtensionOfficer,
   onRequestOpenMapWithReport,
+  onDeleteReport,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [filterType, setFilterType] = useState<string>('all');
@@ -218,12 +221,39 @@ export const CommunityIntel: React.FC<CommunityIntelProps> = ({
                     <span>Verify</span>
                   </button>
                 )}
+
+                {onDeleteReport && (
+                  <button
+                    onClick={() => onDeleteReport(rep.id)}
+                    className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    title="Delete Report"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
 
           </div>
         ))}
       </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-10 bg-stone-50 rounded-2xl border border-dashed border-stone-200 space-y-3">
+          <Users className="w-8 h-8 text-amber-500 mx-auto opacity-60" />
+          <h3 className="text-sm font-bold text-stone-800">No Crowd-Sourced Outbreak Reports</h3>
+          <p className="text-xs text-stone-500 max-w-sm mx-auto">
+            No active pest or disease reports match your current filter criteria. Be the first to submit a community update.
+          </p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs inline-flex items-center space-x-2 shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Report Outbreak / Issue</span>
+          </button>
+        </div>
+      )}
 
       {/* New Report Modal */}
       {showModal && (

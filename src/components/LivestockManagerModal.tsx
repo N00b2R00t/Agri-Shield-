@@ -29,7 +29,7 @@ export interface LivestockAnimal {
 interface LivestockManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  activeFarm: Farm;
+  activeFarm?: Farm | null;
   onUpdateFarm: (updated: Partial<Farm>) => void;
 }
 
@@ -39,6 +39,19 @@ export const LivestockManagerModal: React.FC<LivestockManagerModalProps> = ({
   activeFarm,
   onUpdateFarm,
 }) => {
+  if (!isOpen) return null;
+  if (!activeFarm) {
+    return (
+      <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl max-w-md w-full p-6 text-center space-y-4">
+          <h3 className="text-lg font-bold text-stone-900">No Farm Selected</h3>
+          <p className="text-xs text-stone-500">Please register or select a farm first to manage livestock.</p>
+          <button onClick={onClose} className="px-4 py-2 rounded-xl bg-stone-800 text-white font-bold text-xs">Close</button>
+        </div>
+      </div>
+    );
+  }
+
   const [animals, setAnimals] = useState<LivestockAnimal[]>([
     {
       id: 'anim-1',

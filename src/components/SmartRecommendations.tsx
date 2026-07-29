@@ -19,6 +19,7 @@ import {
   Check,
   X,
   Sprout as FarmIcon,
+  Trash2,
 } from 'lucide-react';
 
 interface SmartRecommendationsProps {
@@ -28,6 +29,7 @@ interface SmartRecommendationsProps {
   onRefreshAI: () => void;
   isGeneratingAI: boolean;
   onOpenNewFarmModal?: () => void;
+  onDeleteRecommendation?: (id: string) => void;
 }
 
 export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
@@ -37,6 +39,7 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
   onRefreshAI,
   isGeneratingAI,
   onOpenNewFarmModal,
+  onDeleteRecommendation,
 }) => {
   const [filterType, setFilterType] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(recommendations[0]?.id || null);
@@ -244,6 +247,15 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
 
                     {/* Action Bar */}
                     <div className="flex items-center justify-end space-x-2 pt-2 border-t border-stone-200">
+                      {onDeleteRecommendation && (
+                        <button
+                          onClick={() => onDeleteRecommendation(rec.id)}
+                          className="px-3 py-1.5 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-50 font-semibold transition-colors flex items-center space-x-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
+                      )}
                       {rec.status !== 'completed' ? (
                         <>
                           <button
@@ -274,6 +286,34 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
               </div>
             );
           })
+        )}
+        {filtered.length === 0 && (
+          <div className="text-center py-10 bg-stone-50 rounded-2xl border border-dashed border-stone-200 space-y-3">
+            <Sparkles className="w-8 h-8 text-emerald-500 mx-auto opacity-60" />
+            <h3 className="text-sm font-bold text-stone-800">No Active Recommendations</h3>
+            <p className="text-xs text-stone-500 max-w-sm mx-auto">
+              {farm ? 'Click "Refresh AI Analysis" to synthesize weather, soil, and vector datasets for your farm.' : 'Register a farm to receive custom AI agricultural advice.'}
+            </p>
+            {farm ? (
+              <button
+                onClick={onRefreshAI}
+                disabled={isGeneratingAI}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs inline-flex items-center space-x-2 shadow-sm"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Generate AI Advisory</span>
+              </button>
+            ) : (
+              onOpenNewFarmModal && (
+                <button
+                  onClick={onOpenNewFarmModal}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm"
+                >
+                  + Register New Farm
+                </button>
+              )
+            )}
+          </div>
         )}
       </div>
 

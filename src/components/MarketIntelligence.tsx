@@ -1,12 +1,13 @@
 import React from 'react';
 import { MarketPrice } from '../types';
-import { Store, TrendingUp, TrendingDown, Minus, Clock, MapPin, Sparkles } from 'lucide-react';
+import { Store, TrendingUp, TrendingDown, Minus, Clock, MapPin, Sparkles, Trash2 } from 'lucide-react';
 
 interface MarketIntelligenceProps {
   markets: MarketPrice[];
+  onDeleteMarketPrice?: (id: string) => void;
 }
 
-export const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({ markets }) => {
+export const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({ markets, onDeleteMarketPrice }) => {
   return (
     <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 space-y-5">
       
@@ -84,14 +85,35 @@ export const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({ markets 
                 {mkt.advice}
               </div>
 
-              <div className="text-[10px] text-stone-400 text-right flex items-center justify-end space-x-1 pt-1">
-                <Clock className="w-3 h-3" />
-                <span>{mkt.lastUpdated}</span>
+              <div className="flex items-center justify-between text-[10px] text-stone-400 pt-1 border-t border-stone-100">
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-3 h-3" />
+                  <span>{mkt.lastUpdated}</span>
+                </div>
+                {onDeleteMarketPrice && (
+                  <button
+                    onClick={() => onDeleteMarketPrice(mkt.id)}
+                    className="text-stone-400 hover:text-red-600 p-1 rounded transition-colors"
+                    title="Delete Market Price Record"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           );
         })}
       </div>
+
+      {markets.length === 0 && (
+        <div className="text-center py-10 bg-stone-50 rounded-2xl border border-dashed border-stone-200 space-y-3">
+          <Store className="w-8 h-8 text-emerald-500 mx-auto opacity-60" />
+          <h3 className="text-sm font-bold text-stone-800">No Market Price Intelligence Records</h3>
+          <p className="text-xs text-stone-500 max-w-sm mx-auto">
+            Wholesale pricing records will appear here as regional commodity boards and buyers update prices.
+          </p>
+        </div>
+      )}
 
     </div>
   );

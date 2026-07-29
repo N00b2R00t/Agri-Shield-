@@ -38,6 +38,11 @@ import {
   getProfilesFromDb,
   saveProfileToDb,
   deleteProfileFromDb,
+  deleteFarmFromDb,
+  deleteReportFromDb,
+  deleteRecommendationFromDb,
+  deletePredictionFromDb,
+  deleteMarketPriceFromDb,
 } from './lib/dbService';
 
 // UI Components
@@ -203,6 +208,7 @@ export default function App() {
   // Load weather when active farm changes
   useEffect(() => {
     async function loadWeather() {
+      if (!activeFarm) return;
       try {
         const res = await fetch(`/api/weather?lat=${activeFarm.lat}&lng=${activeFarm.lng}`);
         if (res.ok) {
@@ -273,6 +279,37 @@ export default function App() {
     await saveFarmToDb(newFarm);
   };
 
+  const handleDeleteFarm = async (farmId: string) => {
+    setFarms((prev) => {
+      const updated = prev.filter((f) => f.id !== farmId);
+      if (activeFarm?.id === farmId) {
+        setActiveFarm(updated.length > 0 ? updated[0] : null);
+      }
+      return updated;
+    });
+    await deleteFarmFromDb(farmId);
+  };
+
+  const handleDeleteReport = async (id: string) => {
+    setReports((prev) => prev.filter((r) => r.id !== id));
+    await deleteReportFromDb(id);
+  };
+
+  const handleDeleteRecommendation = async (id: string) => {
+    setRecommendations((prev) => prev.filter((r) => r.id !== id));
+    await deleteRecommendationFromDb(id);
+  };
+
+  const handleDeletePrediction = async (id: string) => {
+    setPredictions((prev) => prev.filter((p) => p.id !== id));
+    await deletePredictionFromDb(id);
+  };
+
+  const handleDeleteMarketPrice = async (id: string) => {
+    setMarkets((prev) => prev.filter((m) => m.id !== id));
+    await deleteMarketPriceFromDb(id);
+  };
+
   const handleSignOut = () => {
     localStorage.removeItem('agrishield_session_user');
     setIsAuthenticated(false);
@@ -292,14 +329,14 @@ export default function App() {
       id: `rep-${Date.now()}`,
       userId: user.id,
       userName: user.name,
-      farmName: activeFarm.name,
+      farmName: activeFarm ? activeFarm.name : 'General Sector',
       reportType: newRep.reportType || 'pest',
-      cropAffected: newRep.cropAffected || activeFarm.cropType,
+      cropAffected: newRep.cropAffected || (activeFarm ? activeFarm.cropType : 'Crops'),
       severity: newRep.severity || 'high',
       description: newRep.description || 'Observed pest activity in field.',
       photoUrl: newRep.photoUrl,
-      lat: activeFarm.lat + (Math.random() * 0.01 - 0.005),
-      lng: activeFarm.lng + (Math.random() * 0.01 - 0.005),
+      lat: (activeFarm ? activeFarm.lat : -0.5) + (Math.random() * 0.01 - 0.005),
+      lng: (activeFarm ? activeFarm.lng : 35.2) + (Math.random() * 0.01 - 0.005),
       createdAt: new Date().toISOString(),
       verified: true,
       upvotes: 1,
@@ -367,6 +404,7 @@ export default function App() {
 
   // Handle update farm profile
   const handleUpdateFarm = async (updated: Partial<Farm>) => {
+    if (!activeFarm) return;
     const updatedFarm = { ...activeFarm, ...updated };
     setActiveFarm(updatedFarm);
     setFarms((prev) => prev.map((f) => (f.id === updatedFarm.id ? updatedFarm : f)));
@@ -438,6 +476,7 @@ export default function App() {
           activeFarm={activeFarm}
           farms={farms}
           onSelectFarm={(f) => setActiveFarm(f)}
+          onDeleteFarm={handleDeleteFarm}
           onChangeRole={handleChangeRole}
           onOpenNewFarmModal={() => setShowNewFarmModal(true)}
           onOpenLivestockModal={() => setShowLivestockModal(true)}
@@ -513,6 +552,7 @@ export default function App() {
             onRefreshAI={handleRefreshAI}
             isGeneratingAI={isGeneratingAI}
             onOpenNewFarmModal={() => setShowNewFarmModal(true)}
+            onDeleteRecommendation={handleDeleteRecommendation}
           />
         )}
 
@@ -534,11 +574,15 @@ export default function App() {
             onVerifyReport={handleVerifyReport}
             isExtensionOfficer={user.role === 'extension_officer' || user.role === 'admin'}
             onRequestOpenMapWithReport={() => setActiveTab('map')}
+            onDeleteReport={handleDeleteReport}
           />
         )}
 
         {activeTab === 'risk_prediction' && (
-          <AIRiskPrediction predictions={predictions} />
+          <AIRiskPrediction
+            predictions={predictions}
+            onDeletePrediction={handleDeletePrediction}
+          />
         )}
 
         {activeTab === 'whatif' && (
@@ -546,7 +590,10 @@ export default function App() {
         )}
 
         {activeTab === 'markets' && (
-          <MarketIntelligence markets={markets} />
+          <MarketIntelligence
+            markets={markets}
+            onDeleteMarketPrice={handleDeleteMarketPrice}
+          />
         )}
 
         {activeTab === 'admin' && (

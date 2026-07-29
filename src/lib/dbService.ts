@@ -398,6 +398,51 @@ export async function saveProfileToDb(user: UserProfile): Promise<void> {
   }
 }
 
+export async function deleteFarmFromDb(id: string): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await supabase.from('farms').delete().eq('id', id);
+  } catch (e) {
+    console.error('Error deleting farm from Supabase:', e);
+  }
+}
+
+export async function deleteReportFromDb(id: string): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await supabase.from('community_reports').delete().eq('id', id);
+  } catch (e) {
+    console.error('Error deleting report from Supabase:', e);
+  }
+}
+
+export async function deleteRecommendationFromDb(id: string): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await supabase.from('recommendations').delete().eq('id', id);
+  } catch (e) {
+    console.error('Error deleting recommendation from Supabase:', e);
+  }
+}
+
+export async function deletePredictionFromDb(id: string): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await supabase.from('disease_predictions').delete().eq('id', id);
+  } catch (e) {
+    console.error('Error deleting disease prediction from Supabase:', e);
+  }
+}
+
+export async function deleteMarketPriceFromDb(id: string): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await supabase.from('market_prices').delete().eq('id', id);
+  } catch (e) {
+    console.error('Error deleting market price from Supabase:', e);
+  }
+}
+
 export async function deleteProfileFromDb(id: string): Promise<void> {
   if (!isSupabaseConfigured()) return;
   try {

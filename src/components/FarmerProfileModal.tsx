@@ -7,7 +7,7 @@ interface FarmerProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: UserProfile;
-  activeFarm: Farm;
+  activeFarm?: Farm | null;
   onUpdateFarm: (updated: Partial<Farm>) => void;
 }
 
@@ -18,16 +18,16 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
   activeFarm,
   onUpdateFarm,
 }) => {
-  const [farmName, setFarmName] = useState(activeFarm.name);
-  const [county, setCounty] = useState(activeFarm.county || 'Uasin Gishu');
-  const [category, setCategory] = useState<'crop' | 'livestock' | 'mixed'>(activeFarm.category || 'mixed');
-  const [cropType, setCropType] = useState<CropType>(activeFarm.cropType);
-  const [livestockType, setLivestockType] = useState<string>(activeFarm.livestockType || 'Dairy Cattle');
-  const [headCount, setHeadCount] = useState<number>(activeFarm.headCount || 12);
-  const [growthStage, setGrowthStage] = useState<GrowthStage>(activeFarm.growthStage);
-  const [areaHectares, setAreaHectares] = useState(activeFarm.areaHectares);
-  const [soilType, setSoilType] = useState<SoilType>(activeFarm.soilType);
-  const [irrigationMethod, setIrrigationMethod] = useState<IrrigationMethod>(activeFarm.irrigationMethod);
+  const [farmName, setFarmName] = useState(activeFarm?.name || '');
+  const [county, setCounty] = useState(activeFarm?.county || 'Uasin Gishu');
+  const [category, setCategory] = useState<'crop' | 'livestock' | 'mixed'>(activeFarm?.category || 'mixed');
+  const [cropType, setCropType] = useState<CropType>(activeFarm?.cropType || 'Maize');
+  const [livestockType, setLivestockType] = useState<string>(activeFarm?.livestockType || 'Dairy Cattle');
+  const [headCount, setHeadCount] = useState<number>(activeFarm?.headCount || 12);
+  const [growthStage, setGrowthStage] = useState<GrowthStage>(activeFarm?.growthStage || 'Vegetative / Early Growth');
+  const [areaHectares, setAreaHectares] = useState(activeFarm?.areaHectares || 2.5);
+  const [soilType, setSoilType] = useState<SoilType>(activeFarm?.soilType || 'Loam');
+  const [irrigationMethod, setIrrigationMethod] = useState<IrrigationMethod>(activeFarm?.irrigationMethod || 'Rainfed');
   const [saved, setSaved] = useState(false);
 
   if (!isOpen) return null;
@@ -38,8 +38,8 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
     onUpdateFarm({
       name: farmName,
       county,
-      lat: countyObj ? countyObj.lat : activeFarm.lat,
-      lng: countyObj ? countyObj.lng : activeFarm.lng,
+      lat: countyObj ? countyObj.lat : (activeFarm?.lat ?? -0.5),
+      lng: countyObj ? countyObj.lng : (activeFarm?.lng ?? 35.2),
       category,
       cropType,
       livestockType,
@@ -67,8 +67,8 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
               <User className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-stone-900">{user.name}'s Profile</h3>
-              <p className="text-xs text-stone-500">{user.email} • {user.organization}</p>
+              <h3 className="text-base font-bold text-stone-900">{user?.name || 'Farmer'}'s Profile</h3>
+              <p className="text-xs text-stone-500">{user?.email || ''} • {user?.organization || 'AgriShield'}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-stone-400 hover:text-stone-600 font-bold">
@@ -80,7 +80,7 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-3 text-xs font-medium">
           <div className="font-bold text-stone-800 uppercase text-[10px] tracking-wider pb-1 border-b border-stone-150 flex items-center space-x-1">
             <Sprout className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Active Farm Configuration: {activeFarm.id}</span>
+            <span>Active Farm Configuration: {activeFarm?.id || 'Primary'}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

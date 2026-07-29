@@ -196,7 +196,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               Climate Risk Index
             </span>
             <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-bold text-xs">
-              {farm.riskScore}%
+              {farm ? `${farm.riskScore}%` : 'N/A'}
             </div>
           </div>
           <div className="mt-3 flex items-baseline space-x-2">
@@ -206,9 +206,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           <div className="mt-2 w-full bg-stone-100 h-2 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full ${
-                farm.riskScore > 70 ? 'bg-red-500' : farm.riskScore > 40 ? 'bg-amber-500' : 'bg-emerald-500'
+                (farm?.riskScore ?? 50) > 70 ? 'bg-red-500' : (farm?.riskScore ?? 50) > 40 ? 'bg-amber-500' : 'bg-emerald-500'
               }`}
-              style={{ width: `${farm.riskScore}%` }}
+              style={{ width: `${farm?.riskScore ?? 0}%` }}
             />
           </div>
           <p className="text-[11px] text-stone-500 mt-2">
@@ -220,26 +220,26 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
-              {farm.livestockType ? 'Farm & Livestock Health' : 'Crop Health'}
+              {farm?.livestockType ? 'Farm & Livestock Health' : 'Crop Health'}
             </span>
             <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
-              {farm.cropHealthScore}%
+              {farm ? `${farm.cropHealthScore}%` : 'N/A'}
             </div>
           </div>
           <div className="mt-3 flex items-baseline space-x-2">
             <span className="text-2xl font-black text-emerald-800">
-              {farm.livestockHealthScore ? `${farm.livestockHealthScore}%` : 'Optimal'}
+              {farm?.livestockHealthScore ? `${farm.livestockHealthScore}%` : 'Optimal'}
             </span>
             <span className="text-xs text-emerald-600 font-medium">Vigor Score</span>
           </div>
           <div className="mt-2 w-full bg-stone-100 h-2 rounded-full overflow-hidden">
             <div
               className="h-full rounded-full bg-emerald-500"
-              style={{ width: `${farm.cropHealthScore}%` }}
+              style={{ width: `${farm?.cropHealthScore ?? 0}%` }}
             />
           </div>
           <p className="text-[11px] text-stone-500 mt-2">
-            {farm.cropType} {farm.livestockType ? `• ${farm.livestockType}` : ''}
+            {farm ? `${farm.cropType} ${farm.livestockType ? `• ${farm.livestockType}` : ''}` : 'No Registered Farm'}
           </p>
         </div>
 
@@ -247,7 +247,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
-              {farm.livestockType ? 'THI Heat Index' : 'Soil Moisture'}
+              {farm?.livestockType ? 'THI Heat Index' : 'Soil Moisture'}
             </span>
             <Droplets className="w-5 h-5 text-blue-500" />
           </div>

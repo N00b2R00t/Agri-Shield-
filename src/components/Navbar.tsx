@@ -22,6 +22,7 @@ import {
   Sun,
   Moon,
   Trash2,
+  FileText,
 } from 'lucide-react';
 import { Farm, UserRole, UserProfile, AlertNotification } from '../types';
 import { KENYA_COUNTIES, getCountyByName } from '../data/kenyaCounties';
@@ -45,6 +46,7 @@ interface NavbarProps {
   onOpenAuthModal: () => void;
   onOpenLivestockModal?: () => void;
   onOpenSettingsModal?: () => void;
+  onOpenDocModal?: () => void;
   onSignOut?: () => void;
   notifications: AlertNotification[];
   onOpenAssistant: () => void;
@@ -65,6 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuthModal,
   onOpenLivestockModal,
   onOpenSettingsModal,
+  onOpenDocModal,
   onSignOut,
   notifications,
   onOpenAssistant,
@@ -315,8 +318,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Desktop Profile Avatar */}
+            {/* Desktop Profile Avatar & Documentation Button */}
             <div className="hidden sm:flex items-center space-x-1.5">
+              {onOpenDocModal && (
+                <button
+                  onClick={onOpenDocModal}
+                  className="px-2.5 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 text-xs font-bold border border-emerald-500/40 flex items-center space-x-1.5 transition-colors"
+                  title="View Platform Documentation"
+                >
+                  <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="hidden xl:inline">Docs</span>
+                </button>
+              )}
+
               <button
                 onClick={onOpenAuthModal}
                 className="px-2.5 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold border border-stone-700 flex items-center space-x-1.5 transition-colors"
@@ -358,6 +372,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             <AgriShieldLogoFull size={30} variant="dark" />
             
             <div className="flex items-center space-x-2">
+              {onOpenDocModal && (
+                <button
+                  onClick={() => {
+                    setShowMobileMenu(false);
+                    onOpenDocModal();
+                  }}
+                  className="px-2.5 py-1.5 rounded-xl bg-emerald-950 border border-emerald-500/50 text-emerald-300 font-bold text-xs flex items-center space-x-1"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Docs</span>
+                </button>
+              )}
+
               <button
                 onClick={onOpenAssistant}
                 className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md"

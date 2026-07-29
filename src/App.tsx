@@ -65,6 +65,7 @@ import { LiveBackgroundTelemetry } from './components/LiveBackgroundTelemetry';
 import { NewFarmModal } from './components/NewFarmModal';
 import { LivestockManagerModal } from './components/LivestockManagerModal';
 import { SettingsModal, ThemeMode } from './components/SettingsModal';
+import { DocumentationModal } from './components/DocumentationModal';
 import { LandingPage } from './components/LandingPage';
 
 import {
@@ -142,6 +143,7 @@ export default function App() {
   const [showNewFarmModal, setShowNewFarmModal] = useState(false);
   const [showLivestockModal, setShowLivestockModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showDocModal, setShowDocModal] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('agrishield_theme');
     return (saved as ThemeMode) || 'system';
@@ -481,6 +483,7 @@ export default function App() {
           onOpenNewFarmModal={() => setShowNewFarmModal(true)}
           onOpenLivestockModal={() => setShowLivestockModal(true)}
           onOpenSettingsModal={() => setShowSettingsModal(true)}
+          onOpenDocModal={() => setShowDocModal(true)}
           onOpenProfileModal={() => setShowProfileModal(true)}
           onOpenAuthModal={() => setShowAuthModal(true)}
           onSignOut={handleSignOut}
@@ -670,10 +673,21 @@ export default function App() {
         onThemeChange={setTheme}
       />
 
+      <DocumentationModal
+        isOpen={showDocModal}
+        onClose={() => setShowDocModal(false)}
+      />
+
       {/* Footer */}
-      <footer className="bg-stone-900 text-stone-400 border-t border-stone-800 py-6 text-xs text-center space-y-1">
-        <div className="font-semibold text-stone-300">
-          AgriShield AI — Intelligent Climate Risk & Farm Decision Support Platform
+      <footer className="bg-stone-900 text-stone-400 border-t border-stone-800 py-6 text-xs text-center space-y-2">
+        <div className="font-semibold text-stone-300 flex items-center justify-center space-x-2">
+          <span>AgriShield AI — Intelligent Climate Risk & Farm Decision Support Platform</span>
+          <button
+            onClick={() => setShowDocModal(true)}
+            className="text-emerald-400 hover:text-emerald-300 font-bold underline text-xs transition-colors"
+          >
+            System Documentation
+          </button>
         </div>
         <div className="text-[11px] text-stone-400 font-medium">
           Designed & Developed by <span className="text-emerald-400 font-bold">Ian Chirchir</span> • Powered by Gemini AI & Supabase

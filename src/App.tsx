@@ -60,6 +60,7 @@ import { LiveBackgroundTelemetry } from './components/LiveBackgroundTelemetry';
 import { NewFarmModal } from './components/NewFarmModal';
 import { LivestockManagerModal } from './components/LivestockManagerModal';
 import { SettingsModal, ThemeMode } from './components/SettingsModal';
+import { LandingPage } from './components/LandingPage';
 
 import {
   LayoutDashboard,
@@ -75,7 +76,24 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  const [user, setUser] = useState<UserProfile>(INITIAL_USER);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const saved = localStorage.getItem('agrishield_session_user');
+    return !!saved;
+  });
+  const [authInitialMode, setAuthInitialMode] = useState<'login' | 'signup'>('login');
+
+  const [user, setUser] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('agrishield_session_user');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.email) return parsed;
+      } catch {
+        // Fallback
+      }
+    }
+    return INITIAL_USER;
+  });
   const [usersList, setUsersList] = useState<UserProfile[]>(INITIAL_USERS);
   const [farms, setFarms] = useState<Farm[]>(INITIAL_FARMS);
   const [activeFarm, setActiveFarm] = useState<Farm>(INITIAL_FARMS[0]);
@@ -179,7 +197,10 @@ export default function App() {
   // User Management & Authentication Handlers
   const handleLoginSuccess = async (loggedInUser: UserProfile) => {
     setUser(loggedInUser);
-    
+    setIsAuthenticated(true);
+    setShowAuthModal(false);
+    localStorage.setItem('agrishield_session_user', JSON.stringify(loggedInUser));
+
     // Ensure user is in list
     setUsersList((prev) => {
       const exists = prev.some((u) => u.id === loggedInUser.id || u.email === loggedInUser.email);
@@ -231,18 +252,9 @@ export default function App() {
   };
 
   const handleSignOut = () => {
-    const guestUser: UserProfile = {
-      id: `usr-guest`,
-      name: 'Smallholder Farmer',
-      email: 'farmer@agrishield.ai',
-      phone: '0143791311',
-      role: 'farmer',
-      country: 'Kenya',
-      county: 'Uasin Gishu',
-      organization: 'Kenya National Farmers Federation',
-    };
-    setUser(guestUser);
-    setShowAuthModal(true);
+    localStorage.removeItem('agrishield_session_user');
+    setIsAuthenticated(false);
+    setShowAuthModal(false);
   };
 
   const handleChangeRole = (newRole: UserRole) => {
@@ -364,6 +376,29 @@ export default function App() {
     { id: 'markets', label: 'Market Prices', icon: <Store className="w-4 h-4" /> },
     { id: 'admin', label: 'Extension & Admin', icon: <Building2 className="w-4 h-4" /> },
   ];
+
+  if (!isAuthenticated) {
+    return (
+      <ErrorBoundary>
+        <LandingPage
+          onOpenLogin={() => {
+            setAuthInitialMode('login');
+            setShowAuthModal(true);
+          }}
+          onOpenSignUp={() => {
+            setAuthInitialMode('signup');
+            setShowAuthModal(true);
+          }}
+        />
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onLoginSuccess={handleLoginSuccess}
+          initialMode={authInitialMode}
+        />
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>
@@ -521,6 +556,7 @@ export default function App() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onLoginSuccess={handleLoginSuccess}
+        initialMode={authInitialMode}
       />
 
       <AIAssistantModal

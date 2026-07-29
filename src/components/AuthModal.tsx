@@ -42,6 +42,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   initialMode = 'login',
 }) => {
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      setErrorMsg('');
+      setSuccessMsg('');
+    }
+  }, [initialMode, isOpen]);
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -60,49 +69,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [organization, setOrganization] = useState('');
 
   if (!isOpen) return null;
-
-  // Quick Admin Credentials Preset
-  const handleQuickAdminLogin = async () => {
-    setLoading(true);
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    const adminProfile: UserProfile = {
-      id: 'usr-admin-ian',
-      name: 'Ian Kipkoech Chirchir',
-      email: 'iankipkoechchirchir06@gmail.com',
-      phone: '0143791311',
-      role: 'admin',
-      country: 'Kenya',
-      county: 'Uasin Gishu',
-      organization: 'AgriShield AI Developer & Administration',
-      primaryFocus: 'Mixed Agribusiness',
-    };
-
-    try {
-      // Attempt Supabase Auth Sign In
-      const { error } = await supabase.auth.signInWithPassword({
-        email: 'iankipkoechchirchir06@gmail.com',
-        password: '123456',
-      });
-
-      if (error) {
-        console.warn('Supabase sign-in fallback to direct admin session:', error.message);
-      }
-
-      await saveProfileToDb(adminProfile);
-      setSuccessMsg('Signed in successfully as Super Administrator (Ian Kipkoech Chirchir)');
-      setTimeout(() => {
-        onLoginSuccess(adminProfile);
-        onClose();
-      }, 600);
-    } catch {
-      onLoginSuccess(adminProfile);
-      onClose();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,7 +96,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     // Hash password client side before transmission/storage verification
     const hashedPassword = await hashPassword(loginPassword);
 
-      // Standard Supabase authentication or local user session sign in
+    try {
+      // Standard database & Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email: emailClean,
         password: loginPassword,
@@ -138,19 +105,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       if (error) {
         loginRateLimiter.recordFailedAttempt(emailClean);
-        // Fallback to local authenticated profile if Supabase credentials aren't active yet
-        const localUser: UserProfile = {
-          id: data?.user?.id || `usr-${Date.now()}`,
-          name: emailClean.split('@')[0].replace('.', ' '),
-          email: emailClean,
-          phone: '0143791311',
-          role: 'farmer',
-          country: 'Kenya',
-          county: 'Uasin Gishu',
-          organization: 'Smallholder Farmers Network',
-        };
-        onLoginSuccess(localUser);
-        onClose();
+        setErrorMsg('Account credentials not found in database. If you do not have an account, please click "Create New Account" above to sign up.');
+        setLoading(false);
         return;
       }
 
@@ -170,8 +126,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onLoginSuccess(userProfile);
       onClose();
     } catch {
+      // Direct session fallback for registered email
       loginRateLimiter.recordSuccess(emailClean);
-      // Local fallback sign in
       const fallbackUser: UserProfile = {
         id: `usr-${Date.now()}`,
         name: emailClean.split('@')[0],
@@ -180,6 +136,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         role: 'farmer',
         country: 'Kenya',
         county: 'Uasin Gishu',
+        organization: 'Smallholder Farmer',
       };
       onLoginSuccess(fallbackUser);
       onClose();
@@ -276,35 +233,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
           >
             <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Quick Admin Access Banner */}
-        <div className="bg-gradient-to-r from-emerald-950/80 via-stone-900 to-teal-950/80 p-4 border-b border-emerald-800/40 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center space-x-3 text-left">
-            <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
-              <KeyRound className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-emerald-300 flex items-center space-x-1.5">
-                <span>Super Admin Preset</span>
-                <span className="text-[10px] px-1.5 py-0.2 bg-emerald-500 text-stone-950 rounded font-black">
-                  IAN CHIRCHIR
-                </span>
-              </div>
-              <div className="text-[11px] text-stone-400">
-                iankipkoechchirchir06@gmail.com • Pass: <code className="text-amber-300 font-mono">123456</code>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleQuickAdminLogin}
-            disabled={loading}
-            className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs flex items-center justify-center space-x-1.5 shadow-md shrink-0 transition-transform active:scale-95"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Admin One-Click Login</span>
           </button>
         </div>
 
@@ -469,78 +397,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
-              {/* Role Selection (DEFAULT IS FARMER) */}
-              <div>
-                <label className="block text-stone-300 font-bold mb-1">
-                  Account Type / Role <span className="text-emerald-400 font-normal">(Default: Farmer)</span>
-                </label>
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={() => setRole('farmer')}
-                    className={`p-2 rounded-xl border text-left flex items-center space-x-2 ${
-                      role === 'farmer'
-                        ? 'bg-emerald-950 border-emerald-500 text-emerald-300 font-bold'
-                        : 'bg-stone-950 border-stone-800 text-stone-400'
-                    }`}
-                  >
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <div>
-                      <div>Smallholder Farmer</div>
-                      <div className="text-[9px] opacity-70">Manage crops & livestock</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setRole('extension_officer')}
-                    className={`p-2 rounded-xl border text-left flex items-center space-x-2 ${
-                      role === 'extension_officer'
-                        ? 'bg-blue-950 border-blue-500 text-blue-300 font-bold'
-                        : 'bg-stone-950 border-stone-800 text-stone-400'
-                    }`}
-                  >
-                    <Building className="w-4 h-4 text-blue-400" />
-                    <div>
-                      <div>Extension Officer</div>
-                      <div className="text-[9px] opacity-70">Regional alerts & advisories</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setRole('ngo')}
-                    className={`p-2 rounded-xl border text-left flex items-center space-x-2 ${
-                      role === 'ngo'
-                        ? 'bg-purple-950 border-purple-500 text-purple-300 font-bold'
-                        : 'bg-stone-950 border-stone-800 text-stone-400'
-                    }`}
-                  >
-                    <User className="w-4 h-4 text-purple-400" />
-                    <div>
-                      <div>Researcher / NGO</div>
-                      <div className="text-[9px] opacity-70">Climate vector studies</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setRole('admin')}
-                    className={`p-2 rounded-xl border text-left flex items-center space-x-2 ${
-                      role === 'admin'
-                        ? 'bg-amber-950 border-amber-500 text-amber-300 font-bold'
-                        : 'bg-stone-950 border-stone-800 text-stone-400'
-                    }`}
-                  >
-                    <KeyRound className="w-4 h-4 text-amber-400" />
-                    <div>
-                      <div>Administrator</div>
-                      <div className="text-[9px] opacity-70">Full platform controls</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
               <div>
                 <label className="block text-stone-300 font-bold mb-1">Co-operative / Organization (Optional)</label>
                 <input
@@ -576,7 +432,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               className="px-3 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700 text-emerald-300 font-bold flex items-center space-x-1.5 transition-colors"
             >
               <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
-              <span>WhatsApp Admin: 0143791311</span>
+              <span>Contact Official WhatsApp Support</span>
             </a>
           </div>
 

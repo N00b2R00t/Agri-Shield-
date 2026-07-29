@@ -528,13 +528,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               <a
-                href="https://wa.me/254143791311?text=Hello%20Ian%20Chirchir,%20AgriShield%20AI%20Mobile%20Support"
+                href="https://wa.me/254143791311?text=Hello%20Ian%20Chirchir,%20I%20need%20AgriShield%20AI%20Mobile%20Support"
                 target="_blank"
                 rel="noreferrer"
                 className="w-full py-2.5 px-3 rounded-xl bg-emerald-950/70 border border-emerald-800 text-emerald-300 font-bold text-xs flex items-center justify-center space-x-2"
               >
                 <MessageSquare className="w-4 h-4 text-emerald-400" />
-                <span>WhatsApp Admin: 0143791311 (Ian Chirchir)</span>
+                <span>Official WhatsApp Live Support</span>
               </a>
             </div>
 

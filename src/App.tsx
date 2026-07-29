@@ -240,6 +240,10 @@ export default function App() {
 
     if (loggedInUser.role === 'admin' || loggedInUser.role === 'extension_officer') {
       setActiveTab('admin');
+    } else if (loggedInUser.role === 'ngo') {
+      setActiveTab('map');
+    } else {
+      setActiveTab('dashboard');
     }
 
     await saveProfileToDb(loggedInUser);
@@ -322,6 +326,10 @@ export default function App() {
     setUser({ ...user, role: newRole });
     if (newRole === 'admin' || newRole === 'extension_officer') {
       setActiveTab('admin');
+    } else if (newRole === 'ngo') {
+      setActiveTab('map');
+    } else {
+      setActiveTab('dashboard');
     }
   };
 
@@ -436,16 +444,26 @@ export default function App() {
     await addNotificationToDb(newNotif);
   };
 
-  const navTabs = [
-    { id: 'dashboard', label: 'Farm Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: 'recommendations', label: 'Smart Recommendations', icon: <Sparkles className="w-4 h-4 text-emerald-400" />, badge: recommendations.filter(r => r.status === 'pending').length },
-    { id: 'map', label: 'Interactive GIS Map', icon: <MapPin className="w-4 h-4" /> },
-    { id: 'community', label: 'Community Intel', icon: <Users className="w-4 h-4" />, badge: reports.length },
-    { id: 'risk_prediction', label: 'AI Disease Prediction', icon: <Bug className="w-4 h-4" /> },
-    { id: 'whatif', label: 'What-If Simulator', icon: <Zap className="w-4 h-4 text-amber-400" /> },
-    { id: 'markets', label: 'Market Prices', icon: <Store className="w-4 h-4" /> },
-    { id: 'admin', label: 'Extension & Admin', icon: <Building2 className="w-4 h-4" /> },
+  const allNavTabs = [
+    { id: 'dashboard', label: 'Farm Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, roles: ['farmer', 'admin'] },
+    { id: 'recommendations', label: 'Smart Recommendations', icon: <Sparkles className="w-4 h-4 text-emerald-400" />, badge: recommendations.filter(r => r.status === 'pending').length, roles: ['farmer', 'extension_officer', 'ngo', 'admin'] },
+    { id: 'map', label: 'Interactive GIS Map', icon: <MapPin className="w-4 h-4" />, roles: ['farmer', 'extension_officer', 'ngo', 'admin'] },
+    { id: 'community', label: 'Community Intel', icon: <Users className="w-4 h-4" />, badge: reports.length, roles: ['farmer', 'extension_officer', 'ngo', 'admin'] },
+    { id: 'risk_prediction', label: 'AI Disease Prediction', icon: <Bug className="w-4 h-4" />, roles: ['farmer', 'extension_officer', 'ngo', 'admin'] },
+    { id: 'whatif', label: 'What-If Simulator', icon: <Zap className="w-4 h-4 text-amber-400" />, roles: ['farmer', 'ngo', 'admin'] },
+    { id: 'markets', label: 'Market Prices', icon: <Store className="w-4 h-4" />, roles: ['farmer', 'extension_officer', 'ngo', 'admin'] },
+    { id: 'admin', label: 'Extension & Admin', icon: <Building2 className="w-4 h-4" />, roles: ['extension_officer', 'admin'] },
   ];
+
+  const navTabs = allNavTabs.filter((tab) => tab.roles.includes(user.role));
+
+  // Auto fallback if active tab is disallowed for current role
+  useEffect(() => {
+    const isAllowed = navTabs.some((t) => t.id === activeTab);
+    if (!isAllowed && navTabs.length > 0) {
+      setActiveTab(navTabs[0].id as any);
+    }
+  }, [user.role, activeTab]);
 
   if (!isAuthenticated) {
     return (

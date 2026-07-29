@@ -224,42 +224,57 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Ask AI Advisor</span>
             </button>
 
-            {/* Desktop Role Switcher Pill */}
+            {/* Desktop Role Badge & Switcher (Only System Admin can switch roles) */}
             <div className="hidden sm:block relative">
-              <button
-                onClick={() => {
-                  setShowRoleDropdown(!showRoleDropdown);
-                  setShowFarmDropdown(false);
-                  setShowNotifications(false);
-                }}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold border flex items-center space-x-1.5 transition-colors ${
-                  roleLabels[user.role].bg
-                }`}
-              >
-                <span>{roleLabels[user.role].label}</span>
-                <ChevronDown className="w-3 h-3" />
-              </button>
+              {user.role === 'admin' ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setShowRoleDropdown(!showRoleDropdown);
+                      setShowFarmDropdown(false);
+                      setShowNotifications(false);
+                    }}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold border flex items-center space-x-1.5 transition-colors ${
+                      roleLabels[user.role].bg
+                    }`}
+                    title="Switch Role Perspective (Admin Only)"
+                  >
+                    <span>{roleLabels[user.role].label}</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
 
-              {showRoleDropdown && (
-                <div className="absolute right-0 mt-2 w-60 bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl py-2 z-50">
-                  <div className="px-3.5 py-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
-                    Select User Perspective
-                  </div>
-                  {(['farmer', 'extension_officer', 'ngo', 'admin'] as UserRole[]).map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => {
-                        onChangeRole(r);
-                        setShowRoleDropdown(false);
-                      }}
-                      className={`w-full text-left px-3.5 py-2 text-xs font-bold hover:bg-stone-800 transition-colors flex items-center justify-between ${
-                        user.role === r ? 'text-emerald-400 bg-stone-800/80' : 'text-stone-300'
-                      }`}
-                    >
-                      <span>{roleLabels[r].label}</span>
-                      {user.role === r && <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />}
-                    </button>
-                  ))}
+                  {showRoleDropdown && (
+                    <div className="absolute right-0 mt-2 w-60 bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl py-2 z-50">
+                      <div className="px-3.5 py-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                        Switch User Role (Admin Only)
+                      </div>
+                      {(['farmer', 'extension_officer', 'ngo', 'admin'] as UserRole[]).map((r) => (
+                        <button
+                          key={r}
+                          onClick={() => {
+                            onChangeRole(r);
+                            setShowRoleDropdown(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2 text-xs font-bold hover:bg-stone-800 transition-colors flex items-center justify-between ${
+                            user.role === r ? 'text-emerald-400 bg-stone-800/80' : 'text-stone-300'
+                          }`}
+                        >
+                          <span>{roleLabels[r].label}</span>
+                          {user.role === r && <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div
+                  className={`px-2.5 py-1 rounded-xl text-xs font-bold border flex items-center space-x-1.5 ${
+                    roleLabels[user.role].bg
+                  }`}
+                  title={`Logged in as ${roleLabels[user.role].label}`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 opacity-80" />
+                  <span>{roleLabels[user.role].label}</span>
                 </div>
               )}
             </div>
@@ -539,28 +554,30 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            {/* Role Perspective Selector */}
-            <div className="bg-stone-850 border border-stone-800 rounded-2xl p-3.5 space-y-2">
-              <div className="text-[10px] font-bold uppercase text-stone-400">Switch User Role View</div>
-              <div className="grid grid-cols-2 gap-2">
-                {(['farmer', 'extension_officer', 'ngo', 'admin'] as UserRole[]).map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => {
-                      onChangeRole(r);
-                      setShowMobileMenu(false);
-                    }}
-                    className={`p-2 rounded-xl text-xs font-bold border text-left transition-colors ${
-                      user.role === r
-                        ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
-                        : 'bg-stone-900 border-stone-800 text-stone-400'
-                    }`}
-                  >
-                    {roleLabels[r].label}
-                  </button>
-                ))}
+            {/* Role Perspective Selector (Admin Only) */}
+            {user.role === 'admin' && (
+              <div className="bg-stone-850 border border-stone-800 rounded-2xl p-3.5 space-y-2">
+                <div className="text-[10px] font-bold uppercase text-stone-400">Switch User Role View (Admin Only)</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['farmer', 'extension_officer', 'ngo', 'admin'] as UserRole[]).map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => {
+                        onChangeRole(r);
+                        setShowMobileMenu(false);
+                      }}
+                      className={`p-2 rounded-xl text-xs font-bold border text-left transition-colors ${
+                        user.role === r
+                          ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
+                          : 'bg-stone-900 border-stone-800 text-stone-400'
+                      }`}
+                    >
+                      {roleLabels[r].label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Quick Actions Footer */}
             <div className="pt-2 pb-6 space-y-2">

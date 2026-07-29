@@ -268,33 +268,140 @@ COMMUNITY REPORTS CONTEXT:
 ${reportsContext}`;
 
     try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: [
-          { role: 'user', parts: [{ text: `Question from farmer: "${question}"` }] },
-        ],
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-        },
-      });
+      // Helper function to format chat history for Gemini (ensures alternating user/model roles starting with user)
+      const formatGeminiContents = (history: any[], currentQuestion: string) => {
+        const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
 
-      const replyText = response.text || "I'm reviewing your farm and livestock conditions. Deploy shade covers for dairy cows and inspect leaf whorls for pests before upcoming heavy rain.";
+        if (Array.isArray(history)) {
+          for (const msg of history) {
+            if (!msg || !msg.text) continue;
+            const role = msg.sender === 'user' ? 'user' : 'model';
+            if (contents.length > 0 && contents[contents.length - 1].role === role) {
+              contents[contents.length - 1].parts[0].text += `\n${msg.text}`;
+            } else {
+              contents.push({ role, parts: [{ text: msg.text }] });
+            }
+          }
+        }
 
-      const quickActions = [
-        `How do I protect my ${farm?.livestockType ? 'livestock herd' : 'crops'} during heatwaves?`,
-        `How do I preserve Napier grass into silage before flooding?`,
-        `What are current milk & grain market prices?`,
-      ];
+        // Gemini contents MUST start with 'user'
+        while (contents.length > 0 && contents[0].role === 'model') {
+          contents.shift();
+        }
 
-      res.json({ reply: replyText, quickActions });
+        if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+          contents[contents.length - 1].parts[0].text += `\nQuestion from farmer: "${currentQuestion}"`;
+        } else {
+          contents.push({ role: 'user', parts: [{ text: `Question from farmer: "${currentQuestion}"` }] });
+        }
+
+        return contents;
+      };
+
+      const geminiContents = formatGeminiContents(chatHistory, question);
+
+      // Try multiple model aliases in order of preference
+      const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+      let geminiResponse: any = null;
+      let lastError: any = null;
+
+      if (process.env.GEMINI_API_KEY) {
+        for (const mName of modelsToTry) {
+          try {
+            geminiResponse = await ai.models.generateContent({
+              model: mName,
+              contents: geminiContents,
+              config: {
+                systemInstruction,
+                temperature: 0.7,
+              },
+            });
+            if (geminiResponse && geminiResponse.text) {
+              break;
+            }
+          } catch (mErr: any) {
+            lastError = mErr;
+            console.warn(`Gemini model ${mName} attempt failed:`, mErr?.message || mErr);
+          }
+        }
+      }
+
+      if (geminiResponse && geminiResponse.text) {
+        const quickActions = [
+          `Should I irrigate my ${farm?.cropType || 'crops'} today?`,
+          `How to prevent Fall Armyworm infestations?`,
+          `When to top-dress fertilizer given upcoming rain?`,
+        ];
+        return res.json({ reply: geminiResponse.text, quickActions });
+      } else {
+        if (lastError) console.error('Gemini Assistant API Error after retries:', lastError);
+      }
     } catch (err) {
-      console.error('Gemini Assistant API Error:', err);
-      res.json({
-        reply: `Hello! Based on your farm profile (${farm?.cropType || 'Maize'}, ${farm?.livestockType || 'Dairy Cattle'}, ${farm?.growthStage || 'Lactation / Growth stage'}) and today's weather forecast (${weather?.rainfallMm || 38.4}mm rain, THI ${weather?.livestockThi || 74.5}):\n\n1. **Livestock Heat Stress & Water**: THI exceeds 72. Provide shaded loafing sheds and clean electrolyte water for dairy cows.\n2. **Fodder Preservation**: Chop and pit ensile mature Napier grass before expected 38mm downpours.\n3. **Pest & Vector Checks**: Spray cattle against East Coast Fever ticks and check crop leaves for armyworm.`,
-        quickActions: ['How to mitigate THI heat stress?', 'Fodder silage preservation', 'Milk & Market price updates'],
-      });
+      console.error('Gemini Assistant unexpected handler error:', err);
     }
+
+    // Smart contextual fallback generator if API key is missing, invalid, or API call failed
+    const queryLower = (question || '').toLowerCase();
+    const crop = farm?.cropType || 'Maize';
+    const livestock = farm?.livestockType || 'Dairy Cattle';
+    const rain = weather?.rainfallMm || 14.2;
+    const moisture = weather?.soilMoisturePercent || 62;
+    const temp = weather?.currentTemp || 25.4;
+
+    let replyText = '';
+    let fallbackQuickActions = [
+      `Should I irrigate my ${crop} today?`,
+      `How do I protect ${crop} from Fall Armyworm?`,
+      `When to top-dress fertilizer given ${rain}mm rain?`,
+    ];
+
+    if (queryLower.includes('hi') || queryLower.includes('hello') || queryLower.includes('jambo') || queryLower.includes('hey')) {
+      replyText = `Jambo! I am your AgriShield AI Agronomist. I'm actively monitoring your farm in ${farm?.locationName || 'Kenya'} (${crop}, ${farm?.growthStage || 'Active Season'}).\n\nToday's micro-climate summary: **${temp}°C**, **${rain}mm expected rain**, and soil moisture at **${moisture}%**.\n\nHow can I help you optimize your crop yields or protect your livestock today?`;
+      fallbackQuickActions = [
+        `Should I harvest early before the heavy rain?`,
+        `How do I prevent pest infestations?`,
+        `What is my farm's heat stress index?`,
+      ];
+    } else if (queryLower.includes('armyworm') || queryLower.includes('pest') || queryLower.includes('insect') || queryLower.includes('worm') || queryLower.includes('disease')) {
+      replyText = `### 🐛 Fall Armyworm & Pest Risk Advisory for ${crop}\n\nWith humidity at **${weather?.humidity || 76}%** and nearby pest reports within 2.1 km, here is your immediate field protection plan:\n\n1. **Early Scouting**: Inspect leaf whorls of 20 consecutive plants in 5 different field sections. Look for window-pane feeding damage or fresh frass.\n2. **Biological & Chemical Control**: Apply neem oil extract or recommended IPM bio-pesticide (e.g. *Bacillus thuringiensis* or Emamectin Benzoate) early morning or late evening when larvae actively feed.\n3. **Rain Impact**: Since **${rain}mm of rain** is forecast, apply a rain-fast sticker/spreader to prevent pesticide wash-off.\n\n• **Action Items**: Clear weed harbors on field borders and avoid applying pesticide during active rainfall.`;
+      fallbackQuickActions = [
+        `What pesticide dosage is safe for ${crop}?`,
+        `How to report a new pest outbreak to extension officers?`,
+        `Is it safe to spray before rainfall?`,
+      ];
+    } else if (queryLower.includes('harvest') || queryLower.includes('cut') || queryLower.includes('pick') || queryLower.includes('downpour')) {
+      replyText = `### 🌾 Harvest & Downpour Protection Plan for ${crop}\n\nWith **${rain}mm of rainfall** anticipated today (moisture level **${moisture}%**):\n\n1. **Early Harvest Readiness**: If your crop has reached physiological maturity (black layer visible on maize kernels), commence hand harvesting mature ears immediately to avoid grain molding and cob rot.\n2. **Post-Harvest Drying**: Do NOT leave harvested produce directly on open soil. Use raised drying tarpaulins or ventilated cribs elevated off the ground.\n3. **Field Drainage**: Dig perimeter interceptor ditches around low-lying field patches to redirect surface runoff away from standing crops.`;
+      fallbackQuickActions = [
+        `How to construct low-cost raised drying cribs?`,
+        `What are current market prices for early harvest ${crop}?`,
+        `How to prevent aflatoxin during wet harvests?`,
+      ];
+    } else if (queryLower.includes('fertilizer') || queryLower.includes('nitrogen') || queryLower.includes('top-dress') || queryLower.includes('topdress') || queryLower.includes('can') || queryLower.includes('dap')) {
+      replyText = `### 🧪 Fertilizer & Top-Dressing Guidance for ${crop}\n\nGiven current soil moisture (**${moisture}%**) and expected rain (**${rain}mm**):\n\n1. **Timing Advisory**: Delay CAN/Urea top-dressing by 24–48 hours until heavy downpours subside. Applying fertilizer right before heavy rain causes severe nitrogen leaching into deeper subsoil.\n2. **Application Technique**: Band fertilizer 5–7 cm away from plant stems and lightly cover with soil to minimize volatilization.\n3. **Soil Conditions**: Ensure soil is moist but not waterlogged before top-dressing.`;
+      fallbackQuickActions = [
+        `How many kg of CAN fertilizer per acre for ${crop}?`,
+        `Should I mix fertilizer with organic manure?`,
+        `Signs of nitrogen deficiency in ${crop}?`,
+      ];
+    } else if (queryLower.includes('irrigate') || queryLower.includes('water') || queryLower.includes('dry') || queryLower.includes('drought')) {
+      replyText = `### 💧 Irrigation & Water Management Strategy\n\nWith current soil moisture at **${moisture}%** and **${rain}mm of expected rainfall**:\n\n1. **Irrigation Schedule**: Hold off on artificial irrigation for the next 3 days. Soil moisture is currently adequate.\n2. **Rainwater Harvesting**: Direct farm runoff into farm ponds or underground water pans to store water for upcoming dry spells.\n3. **Mulching**: Apply crop residue mulch between rows to conserve soil moisture when sunny conditions return.`;
+      fallbackQuickActions = [
+        `When should I resume irrigation for ${crop}?`,
+        `How to build a drip irrigation system on a small budget?`,
+        `How to check soil moisture without sensors?`,
+      ];
+    } else if (queryLower.includes('livestock') || queryLower.includes('cow') || queryLower.includes('cattle') || queryLower.includes('milk') || queryLower.includes('thi') || queryLower.includes('heat')) {
+      replyText = `### 🐄 Livestock Health & Heat Stress Advisory for ${livestock}\n\n1. **Heat Stress Control**: Maintain shaded loafing areas and provide cool, clean drinking water mixed with mineral salts.\n2. **Tick & Vector Prevention**: Inspect animals weekly for ticks around ears and udder. Spray with recommended acaricides.\n3. **Fodder Preservation**: Chop mature Napier grass and store in plastic silage bags or trench pits before heavy rain.`;
+      fallbackQuickActions = [
+        `How to make silage in plastic bags?`,
+        `Symptoms of East Coast Fever in dairy cattle?`,
+        `How to increase milk yield in warm weather?`,
+      ];
+    } else {
+      replyText = `Based on your farm profile (${crop}, ${livestock}, ${farm?.growthStage || 'Active Season'}) and current micro-climate conditions (**${temp}°C**, **${rain}mm rain**, **${moisture}% soil moisture**):\n\n1. **Field Inspection**: Check field drainage channels to handle expected rain runoff.\n2. **Pest Monitoring**: Inspect crop foliage for early signs of Fall Armyworm or fungal leaf spots caused by high humidity (${weather?.humidity || 76}%).\n3. **Climate Action**: Hold off on fertilizer top-dressing until heavy rainfall eases to protect nutrient investments.`;
+    }
+
+    res.json({ reply: replyText, quickActions: fallbackQuickActions });
   });
 
   // AI Smart Recommendation Engine Endpoint
@@ -308,44 +415,49 @@ Cover BOTH crops AND livestock where applicable (e.g., THI shade management, sil
 
     const promptText = `Farm: ${JSON.stringify(farm || {})}\nWeather: ${JSON.stringify(weather || {})}\nReports: ${JSON.stringify(nearbyReports || [])}`;
 
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: promptText,
-        config: {
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                id: { type: Type.STRING },
-                farmId: { type: Type.STRING },
-                title: { type: Type.STRING },
-                actionType: { type: Type.STRING, description: "One of: 'irrigation', 'planting', 'harvest', 'pest_control', 'fertilizer', 'crop_switch', 'livestock_shelter', 'fodder_preservation', 'vaccination', 'pasture_rotation', 'water_management'" },
-                priority: { type: Type.STRING, description: "One of: 'high', 'medium', 'low'" },
-                summary: { type: Type.STRING },
-                reason: { type: Type.STRING },
-                confidenceScore: { type: Type.INTEGER },
-                supportingData: { type: Type.ARRAY, items: { type: Type.STRING } },
-                potentialImpact: { type: Type.STRING },
-                suggestedActionSteps: { type: Type.ARRAY, items: { type: Type.STRING } },
-                status: { type: Type.STRING, description: "'pending'" },
-                createdAt: { type: Type.STRING },
+    if (process.env.GEMINI_API_KEY) {
+      const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+      for (const mName of modelsToTry) {
+        try {
+          const response = await ai.models.generateContent({
+            model: mName,
+            contents: promptText,
+            config: {
+              systemInstruction,
+              responseMimeType: 'application/json',
+              responseSchema: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    id: { type: Type.STRING },
+                    farmId: { type: Type.STRING },
+                    title: { type: Type.STRING },
+                    actionType: { type: Type.STRING, description: "One of: 'irrigation', 'planting', 'harvest', 'pest_control', 'fertilizer', 'crop_switch', 'livestock_shelter', 'fodder_preservation', 'vaccination', 'pasture_rotation', 'water_management'" },
+                    priority: { type: Type.STRING, description: "One of: 'high', 'medium', 'low'" },
+                    summary: { type: Type.STRING },
+                    reason: { type: Type.STRING },
+                    confidenceScore: { type: Type.INTEGER },
+                    supportingData: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    potentialImpact: { type: Type.STRING },
+                    suggestedActionSteps: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    status: { type: Type.STRING, description: "'pending'" },
+                    createdAt: { type: Type.STRING },
+                  },
+                  required: ['title', 'actionType', 'priority', 'summary', 'reason', 'confidenceScore', 'supportingData', 'potentialImpact', 'suggestedActionSteps'],
+                },
               },
-              required: ['title', 'actionType', 'priority', 'summary', 'reason', 'confidenceScore', 'supportingData', 'potentialImpact', 'suggestedActionSteps'],
             },
-          },
-        },
-      });
+          });
 
-      if (response.text) {
-        const parsed = JSON.parse(response.text.trim());
-        return res.json(parsed);
+          if (response && response.text) {
+            const parsed = JSON.parse(response.text.trim());
+            return res.json(parsed);
+          }
+        } catch (err) {
+          console.warn(`Gemini Recommendations model ${mName} error:`, err);
+        }
       }
-    } catch (err) {
-      console.error('Gemini Recommendations Error:', err);
     }
 
     res.json(recommendationsStore);
@@ -364,47 +476,52 @@ Simulation Variables:
 
     const systemInstruction = `You are AgriShield AI's What-If Agricultural Risk Simulator. Estimate agricultural outcomes under hypothetical management shifts and climate scenarios. Return a valid JSON object matching the requested schema.`;
 
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: promptText,
-        config: {
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              expectedYieldTonsPerHa: { type: Type.NUMBER },
-              yieldChangePercent: { type: Type.NUMBER },
-              diseaseRiskPercent: { type: Type.NUMBER },
-              profitEstimateUSD: { type: Type.NUMBER },
-              profitChangeUSD: { type: Type.NUMBER },
-              waterUsageLiters: { type: Type.NUMBER },
-              carbonFootprintKgCo2: { type: Type.NUMBER },
-              aiExplanation: { type: Type.STRING },
-              keyRecommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
+    if (process.env.GEMINI_API_KEY) {
+      const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+      for (const mName of modelsToTry) {
+        try {
+          const response = await ai.models.generateContent({
+            model: mName,
+            contents: promptText,
+            config: {
+              systemInstruction,
+              responseMimeType: 'application/json',
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  expectedYieldTonsPerHa: { type: Type.NUMBER },
+                  yieldChangePercent: { type: Type.NUMBER },
+                  diseaseRiskPercent: { type: Type.NUMBER },
+                  profitEstimateUSD: { type: Type.NUMBER },
+                  profitChangeUSD: { type: Type.NUMBER },
+                  waterUsageLiters: { type: Type.NUMBER },
+                  carbonFootprintKgCo2: { type: Type.NUMBER },
+                  aiExplanation: { type: Type.STRING },
+                  keyRecommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
+                },
+                required: [
+                  'expectedYieldTonsPerHa',
+                  'yieldChangePercent',
+                  'diseaseRiskPercent',
+                  'profitEstimateUSD',
+                  'profitChangeUSD',
+                  'waterUsageLiters',
+                  'carbonFootprintKgCo2',
+                  'aiExplanation',
+                  'keyRecommendations',
+                ],
+              },
             },
-            required: [
-              'expectedYieldTonsPerHa',
-              'yieldChangePercent',
-              'diseaseRiskPercent',
-              'profitEstimateUSD',
-              'profitChangeUSD',
-              'waterUsageLiters',
-              'carbonFootprintKgCo2',
-              'aiExplanation',
-              'keyRecommendations',
-            ],
-          },
-        },
-      });
+          });
 
-      if (response.text) {
-        const parsed = JSON.parse(response.text.trim());
-        return res.json(parsed);
+          if (response && response.text) {
+            const parsed = JSON.parse(response.text.trim());
+            return res.json(parsed);
+          }
+        } catch (err) {
+          console.warn(`Gemini What-If model ${mName} error:`, err);
+        }
       }
-    } catch (err) {
-      console.error('Gemini What-If Simulation Error:', err);
     }
 
     // Fallback analytical calculation

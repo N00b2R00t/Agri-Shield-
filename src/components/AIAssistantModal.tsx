@@ -102,10 +102,23 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
       }
     } catch (err) {
       console.error('Chat error:', err);
+      const qLower = q.toLowerCase();
+      const crop = farm?.cropType || 'Maize';
+      let fallbackText = '';
+      if (qLower.includes('hi') || qLower.includes('hello') || qLower.includes('jambo')) {
+        fallbackText = `Jambo! I am your AgriShield AI Agronomist. Today's forecast for your ${crop} farm in ${farm?.locationName || 'Kenya'} shows **${weather.currentTemp}°C** with **${weather.rainfallMm}mm rain** expected.\n\nHow can I help you protect your crops or livestock today?`;
+      } else if (qLower.includes('armyworm') || qLower.includes('pest') || qLower.includes('disease')) {
+        fallbackText = `### 🐛 Pest Control Advisory for ${crop}\n\n1. **Scout Leaf Whorls**: Inspect 20 plants across 5 field sections for feeding holes or frass.\n2. **Targeted Application**: Apply neem oil or bio-pesticides early morning before heat peaks.\n3. **Rain Precaution**: Avoid spraying right before heavy downpours (${weather.rainfallMm}mm forecast).`;
+      } else if (qLower.includes('harvest') || qLower.includes('cut') || qLower.includes('downpour')) {
+        fallbackText = `### 🌾 Harvest & Downpour Protection\n\n1. **Early Harvest**: Harvest physiologically mature ears now to avoid cob rot from ${weather.rainfallMm}mm expected rain.\n2. **Drying Tarps**: Use elevated canvas or plastic tarps off wet soil.\n3. **Drainage**: Clear runoff channels along crop rows.`;
+      } else {
+        fallbackText = `Based on current soil moisture (${weather.soilMoisturePercent}%) and upcoming rain (${weather.rainfallMm}mm):\n\n• **Irrigation**: Hold off on artificial watering.\n• **Fertilizer**: Delay top-dressing until heavy rain subsides to prevent nitrogen leaching.\n• **Drainage**: Clear field ditches to prevent root rot.`;
+      }
+
       const fallbackMsg: ChatMessage = {
         id: `ai-err-${Date.now()}`,
         sender: 'ai',
-        text: `Based on current soil moisture (${weather.soilMoisturePercent}%) and upcoming rain (${weather.rainfallMm}mm):\n\n• **Irrigation**: Hold off on artificial watering until Saturday.\n• **Fertilizer**: Delay top-dressing to prevent nutrient leaching into groundwater.\n• **Drainage**: Clear field ditches to prevent root rot.`,
+        text: fallbackText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, fallbackMsg]);

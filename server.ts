@@ -43,6 +43,56 @@ async function startServer() {
     res.json({ status: 'ok', service: 'AgriShield AI Engine', time: new Date().toISOString() });
   });
 
+  // Role Access & Authorization Check Endpoint
+  app.post('/api/roles/access-check', (req, res) => {
+    const { role, userEmail } = req.body;
+    const allowedRoles = ['farmer', 'extension_officer', 'ngo', 'admin'];
+
+    if (!role || !allowedRoles.includes(role)) {
+      return res.status(403).json({ allowed: false, message: 'Invalid or missing user role' });
+    }
+
+    const permissions: Record<string, string[]> = {
+      farmer: ['read:farms', 'write:farms', 'read:weather', 'read:advisory', 'read:markets'],
+      extension_officer: ['read:farms', 'write:broadcast', 'write:advisory', 'read:reports', 'write:reports'],
+      ngo: ['read:gis', 'read:vulnerability', 'read:reports', 'read:simulations', 'export:impact'],
+      admin: ['read:all', 'write:all', 'manage:users', 'manage:system', 'manage:database'],
+    };
+
+    res.json({
+      allowed: true,
+      role,
+      userEmail,
+      grantedPermissions: permissions[role] || [],
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Role Broadcast Endpoint
+  app.post('/api/roles/broadcast', (req, res) => {
+    const { senderRole, title, message, severity, targetCounty } = req.body;
+
+    if (senderRole !== 'extension_officer' && senderRole !== 'admin') {
+      return res.status(403).json({ error: 'Only Extension Officers and Admins can issue broadcasts' });
+    }
+
+    const newNotification = {
+      id: `notif-${Date.now()}`,
+      title: title || 'Emergency Broadcast Alert',
+      type: 'weather_warning',
+      severity: severity || 'warning',
+      message: message || 'Please take precautions for current field conditions.',
+      timestamp: 'Just now',
+      read: false,
+    };
+
+    res.status(201).json({
+      success: true,
+      notification: newNotification,
+      broadcastTarget: targetCounty || 'All Registered Farmers',
+    });
+  });
+
   // Weather Endpoint with Open-Meteo Integration
   app.get('/api/weather', async (req, res) => {
     const lat = parseFloat(req.query.lat as string) || -0.1732;

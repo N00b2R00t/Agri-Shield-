@@ -183,77 +183,77 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <div className="bg-stone-900 border border-stone-800 rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl text-stone-100 space-y-5 my-6 max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md overflow-y-auto p-3 sm:p-6 flex justify-center items-start min-h-screen my-0">
+      <div className="bg-stone-900 border border-stone-800 rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl text-stone-100 space-y-5 my-auto sm:my-8 relative shrink-0">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-stone-800 pb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+          <div className="flex items-center space-x-3 min-w-0">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
               <Settings className="w-5 h-5" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h3 className="text-base font-bold text-stone-100">AgriShield Settings & Account Management</h3>
-                <span className="bg-emerald-500/20 text-emerald-300 text-[10px] uppercase font-black px-2 py-0.5 rounded-full border border-emerald-500/30">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-base font-bold text-stone-100 truncate">AgriShield Settings & Account Management</h3>
+                <span className="bg-emerald-500/20 text-emerald-300 text-[10px] uppercase font-black px-2 py-0.5 rounded-full border border-emerald-500/30 shrink-0">
                   {user.role.replace('_', ' ')}
                 </span>
               </div>
-              <p className="text-xs text-stone-400">Manage profile information, password security, and platform administration</p>
+              <p className="text-xs text-stone-400 truncate">Manage profile information, password security, and platform administration</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+            className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800 transition-colors shrink-0 ml-2"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center space-x-2 bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-bold shrink-0">
+        {/* Tab Navigation - Responsive Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-bold">
           <button
             type="button"
             onClick={() => setActiveTab('profile')}
-            className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-all ${
+            className={`w-full py-2 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-all text-center ${
               activeTab === 'profile'
                 ? 'bg-emerald-600 text-white shadow-md'
                 : 'text-stone-400 hover:text-stone-200 hover:bg-stone-900'
             }`}
           >
-            <User className="w-4 h-4" />
-            <span>Profile & Password</span>
+            <User className="w-4 h-4 shrink-0" />
+            <span className="truncate">Profile & Password</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('admin')}
-            className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-all ${
+            className={`w-full py-2 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-all text-center ${
               activeTab === 'admin'
                 ? 'bg-emerald-600 text-white shadow-md'
                 : 'text-stone-400 hover:text-stone-200 hover:bg-stone-900'
             }`}
           >
-            <ShieldCheck className="w-4 h-4" />
-            <span>Website & Admin Controls</span>
+            <ShieldCheck className="w-4 h-4 shrink-0" />
+            <span className="truncate">Website & Admin Controls</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('security')}
-            className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-all ${
+            className={`w-full py-2 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-all text-center ${
               activeTab === 'security'
                 ? 'bg-red-950 border border-red-800 text-red-300 shadow-md'
                 : 'text-stone-400 hover:text-stone-200 hover:bg-stone-900'
             }`}
           >
-            <Lock className="w-4 h-4" />
-            <span>Account Security</span>
+            <Lock className="w-4 h-4 shrink-0" />
+            <span className="truncate">Account Security</span>
           </button>
         </div>
 
-        {/* Modal Scrollable Content */}
-        <div className="overflow-y-auto space-y-5 pr-1 flex-1">
+        {/* Modal Full Detail Container */}
+        <div className="space-y-5">
 
           {/* TAB 1: PROFILE & PASSWORD */}
           {activeTab === 'profile' && (
@@ -422,35 +422,65 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="block text-stone-400 mb-1 font-semibold">Current Password</label>
-                      <input
-                        type={showPasswords ? 'text' : 'password'}
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-amber-500 focus:outline-none"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords ? 'text' : 'password'}
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="w-full bg-stone-900 border border-stone-800 rounded-xl pl-3 pr-9 py-2 text-stone-100 font-medium focus:border-amber-500 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswords(!showPasswords)}
+                          className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-200 transition-colors"
+                          title={showPasswords ? 'Hide password' : 'Show password'}
+                        >
+                          {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     <div>
                       <label className="block text-stone-400 mb-1 font-semibold">New Password</label>
-                      <input
-                        type={showPasswords ? 'text' : 'password'}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Min 6 characters"
-                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-amber-500 focus:outline-none"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords ? 'text' : 'password'}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Min 6 characters"
+                          className="w-full bg-stone-900 border border-stone-800 rounded-xl pl-3 pr-9 py-2 text-stone-100 font-medium focus:border-amber-500 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswords(!showPasswords)}
+                          className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-200 transition-colors"
+                          title={showPasswords ? 'Hide password' : 'Show password'}
+                        >
+                          {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     <div>
                       <label className="block text-stone-400 mb-1 font-semibold">Confirm New Password</label>
-                      <input
-                        type={showPasswords ? 'text' : 'password'}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Repeat new password"
-                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-amber-500 focus:outline-none"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Repeat new password"
+                          className="w-full bg-stone-900 border border-stone-800 rounded-xl pl-3 pr-9 py-2 text-stone-100 font-medium focus:border-amber-500 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswords(!showPasswords)}
+                          className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-200 transition-colors"
+                          title={showPasswords ? 'Hide password' : 'Show password'}
+                        >
+                          {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -597,7 +627,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                 </div>
 
-                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                <div className="space-y-2">
                   {usersList.length > 0 ? (
                     usersList.map((u) => (
                       <div key={u.id} className="p-2.5 rounded-xl bg-stone-900 border border-stone-800 flex items-center justify-between">
@@ -806,10 +836,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Developer Support Banner */}
-        <div className="p-3 rounded-2xl bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-between text-xs shrink-0">
+        <div className="p-3 rounded-2xl bg-emerald-950/60 border border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
           <div className="space-y-0.5">
             <div className="font-bold text-emerald-300 flex items-center space-x-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span>Developer & Support Channel</span>
             </div>
             <div className="text-[11px] text-stone-300">Ian Kipkoech Chirchir</div>
@@ -818,7 +848,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             href="https://wa.me/254143791311?text=Hello%20Ian%20Chirchir,%20I%20need%20AgriShield%20Settings%20Support"
             target="_blank"
             rel="noreferrer"
-            className="px-3 py-1.5 rounded-xl bg-emerald-500 text-stone-950 font-black text-xs flex items-center space-x-1 hover:bg-emerald-400 transition-colors"
+            className="px-3 py-1.5 rounded-xl bg-emerald-500 text-stone-950 font-black text-xs flex items-center justify-center space-x-1 hover:bg-emerald-400 transition-colors shrink-0"
           >
             <MessageSquare className="w-3.5 h-3.5" />
             <span>WhatsApp Support</span>
@@ -826,13 +856,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Modal Action Buttons */}
-        <div className="pt-2 border-t border-stone-800 flex items-center justify-between shrink-0">
+        <div className="pt-2 border-t border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <button
             onClick={() => {
               onSignOut();
               onClose();
             }}
-            className="px-4 py-2.5 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-300 font-bold text-xs flex items-center space-x-2 transition-colors"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-300 font-bold text-xs flex items-center justify-center space-x-2 transition-colors"
           >
             <LogOut className="w-4 h-4 text-red-400" />
             <span>Sign Out</span>
@@ -840,7 +870,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md text-center"
           >
             Done
           </button>

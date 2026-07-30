@@ -45,6 +45,41 @@ import {
   deleteMarketPriceFromDb,
 } from './lib/dbService';
 
+// Role Views Import
+import {
+  FarmerDashboard,
+  MyFarms,
+  RiskAlerts,
+  SmartAdvisory,
+  MarketPrices,
+  FarmerSettings,
+  FarmerSupport,
+  ExtensionDashboard,
+  RegionalFarms,
+  BroadcastDispatcher,
+  FieldAdvisory,
+  PestOutbreakRadar,
+  ExtensionSimulations,
+  ExtensionSettings,
+  ExtensionSupport,
+  NGODashboard,
+  ClimateGISMap,
+  VulnerabilityAnalytics,
+  ClimateSimulator,
+  NGOCommunityReports,
+  MarketTrends,
+  NGOSettings,
+  NGOSupport,
+  AdminDashboard,
+  UserManagement,
+  SystemBroadcast,
+  RiskAnalytics,
+  DatabaseMonitor,
+  MarketAdmin,
+  AdminSettings,
+  AdminSupport,
+} from './roles';
+
 // UI Components
 import { Navbar } from './components/Navbar';
 import { ErrorBoundary } from './components/ErrorPage';
@@ -79,6 +114,14 @@ import {
   Building2,
   AlertTriangle,
   CheckCircle2,
+  Sprout,
+  MessageSquare,
+  Settings,
+  Radio,
+  Globe,
+  BarChart3,
+  Lock,
+  Database,
 } from 'lucide-react';
 
 export default function App() {
@@ -210,9 +253,7 @@ export default function App() {
           if (dbUser.role !== user.role || dbUser.name !== user.name || dbUser.county !== user.county) {
             setUser(dbUser);
             localStorage.setItem('agrishield_session_user', JSON.stringify(dbUser));
-            if (dbUser.role === 'admin' || dbUser.role === 'extension_officer') {
-              setActiveTab('admin');
-            }
+            setActiveTab('dashboard');
           }
         }
       }
@@ -233,9 +274,7 @@ export default function App() {
         if (dbUser && (dbUser.role !== user.role || dbUser.name !== user.name || dbUser.county !== user.county)) {
           setUser(dbUser);
           localStorage.setItem('agrishield_session_user', JSON.stringify(dbUser));
-          if (dbUser.role === 'admin' || dbUser.role === 'extension_officer') {
-            setActiveTab('admin');
-          }
+          setActiveTab('dashboard');
         }
       }
     }
@@ -280,13 +319,7 @@ export default function App() {
       return prev.map((u) => (u.email === loggedInUser.email ? loggedInUser : u));
     });
 
-    if (loggedInUser.role === 'admin' || loggedInUser.role === 'extension_officer') {
-      setActiveTab('admin');
-    } else if (loggedInUser.role === 'ngo') {
-      setActiveTab('map');
-    } else {
-      setActiveTab('dashboard');
-    }
+    setActiveTab('dashboard');
 
     await saveProfileToDb(loggedInUser);
   };
@@ -313,13 +346,7 @@ export default function App() {
       if (id === user.id || (updatedUser.email && user.email && updatedUser.email.toLowerCase() === user.email.toLowerCase())) {
         setUser(updatedUser);
         localStorage.setItem('agrishield_session_user', JSON.stringify(updatedUser));
-        if (newRole === 'admin' || newRole === 'extension_officer') {
-          setActiveTab('admin');
-        } else if (newRole === 'ngo') {
-          setActiveTab('map');
-        } else {
-          setActiveTab('dashboard');
-        }
+        setActiveTab('dashboard');
       }
     }
   };
@@ -379,13 +406,7 @@ export default function App() {
     setUsersList((prev) => prev.map((u) => (u.id === user.id || u.email === user.email ? updatedUser : u)));
     saveProfileToDb(updatedUser);
 
-    if (newRole === 'admin' || newRole === 'extension_officer') {
-      setActiveTab('admin');
-    } else if (newRole === 'ngo') {
-      setActiveTab('map');
-    } else {
-      setActiveTab('dashboard');
-    }
+    setActiveTab('dashboard');
   };
 
   // Handle adding community report
@@ -499,18 +520,56 @@ export default function App() {
     await addNotificationToDb(newNotif);
   };
 
-  const allNavTabs = [
-    { id: 'dashboard', label: 'Farm Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, roles: ['farmer', 'admin'] },
-    { id: 'recommendations', label: 'Smart Recommendations', icon: <Sparkles className="w-4 h-4 text-emerald-400" />, badge: recommendations.filter(r => r.status === 'pending').length, roles: ['farmer', 'extension_officer', 'ngo', 'admin'] },
-    { id: 'map', label: 'Interactive GIS Map', icon: <MapPin className="w-4 h-4" />, roles: ['farmer', 'extension_officer', 'ngo', 'admin'] },
-    { id: 'community', label: 'Community Intel', icon: <Users className="w-4 h-4" />, badge: reports.length, roles: ['farmer', 'extension_officer', 'ngo', 'admin'] },
-    { id: 'risk_prediction', label: 'AI Disease Prediction', icon: <Bug className="w-4 h-4" />, roles: ['farmer', 'extension_officer', 'ngo', 'admin'] },
-    { id: 'whatif', label: 'What-If Simulator', icon: <Zap className="w-4 h-4 text-amber-400" />, roles: ['farmer', 'ngo', 'admin'] },
-    { id: 'markets', label: 'Market Prices', icon: <Store className="w-4 h-4" />, roles: ['farmer', 'extension_officer', 'ngo', 'admin'] },
-    { id: 'admin', label: 'Extension & Admin', icon: <Building2 className="w-4 h-4" />, roles: ['extension_officer', 'admin'] },
-  ];
+  const getNavTabsForRole = (role: UserRole) => {
+    switch (role) {
+      case 'farmer':
+        return [
+          { id: 'dashboard', label: 'Farm Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+          { id: 'my_farms', label: 'My Plots & Herd', icon: <Sprout className="w-4 h-4 text-emerald-400" /> },
+          { id: 'advisory', label: 'Smart Advisory', icon: <Sparkles className="w-4 h-4 text-amber-400" />, badge: recommendations.filter(r => r.status === 'pending').length },
+          { id: 'risk_alerts', label: 'Risk Radar', icon: <AlertTriangle className="w-4 h-4 text-red-400" /> },
+          { id: 'community', label: 'Community Intel', icon: <Users className="w-4 h-4" />, badge: reports.length },
+          { id: 'markets', label: 'Market Prices', icon: <Store className="w-4 h-4" /> },
+          { id: 'settings', label: 'Farmer Settings', icon: <Settings className="w-4 h-4" /> },
+          { id: 'support', label: 'Support / Messages', icon: <MessageSquare className="w-4 h-4 text-cyan-400" /> },
+        ];
+      case 'extension_officer':
+        return [
+          { id: 'dashboard', label: 'Officer Dashboard', icon: <Building2 className="w-4 h-4 text-blue-400" /> },
+          { id: 'regional_farms', label: 'Regional Smallholders', icon: <Sprout className="w-4 h-4 text-emerald-400" /> },
+          { id: 'broadcast', label: 'Emergency Broadcast', icon: <Radio className="w-4 h-4 text-red-400" /> },
+          { id: 'field_advisory', label: 'Field Advisory', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
+          { id: 'outbreak_radar', label: 'Outbreak Radar', icon: <Bug className="w-4 h-4 text-red-400" /> },
+          { id: 'simulations', label: 'Yield Simulator', icon: <Zap className="w-4 h-4 text-amber-400" /> },
+          { id: 'settings', label: 'Officer Credentials', icon: <Settings className="w-4 h-4" /> },
+          { id: 'support', label: 'Messages & Support', icon: <MessageSquare className="w-4 h-4 text-cyan-400" /> },
+        ];
+      case 'ngo':
+        return [
+          { id: 'dashboard', label: 'NGO Desk', icon: <Globe className="w-4 h-4 text-purple-400" /> },
+          { id: 'gis_map', label: 'Climate GIS Map', icon: <MapPin className="w-4 h-4 text-blue-400" /> },
+          { id: 'vulnerability', label: 'Vulnerability Matrix', icon: <BarChart3 className="w-4 h-4 text-amber-400" /> },
+          { id: 'simulator', label: 'Climate Simulator', icon: <Zap className="w-4 h-4 text-emerald-400" /> },
+          { id: 'reports', label: 'Field Incident Audit', icon: <Users className="w-4 h-4" />, badge: reports.length },
+          { id: 'markets', label: 'Food Security Trends', icon: <Store className="w-4 h-4" /> },
+          { id: 'settings', label: 'NGO Profile', icon: <Settings className="w-4 h-4" /> },
+          { id: 'support', label: 'Impact Support', icon: <MessageSquare className="w-4 h-4 text-cyan-400" /> },
+        ];
+      case 'admin':
+        return [
+          { id: 'dashboard', label: 'Director Control', icon: <Lock className="w-4 h-4 text-red-400" /> },
+          { id: 'users', label: 'User & Role Manager', icon: <Users className="w-4 h-4 text-emerald-400" />, badge: usersList.length },
+          { id: 'broadcast', label: 'Global Broadcast', icon: <Radio className="w-4 h-4 text-red-400" /> },
+          { id: 'risk', label: 'Disease Risk Engines', icon: <Bug className="w-4 h-4 text-amber-400" /> },
+          { id: 'db_monitor', label: 'Database & API Telemetry', icon: <Database className="w-4 h-4 text-cyan-400" /> },
+          { id: 'market_admin', label: 'Commodity Feed Editor', icon: <Store className="w-4 h-4" /> },
+          { id: 'settings', label: 'Security Policies', icon: <Settings className="w-4 h-4" /> },
+          { id: 'support', label: 'Messages & Audit Logs', icon: <MessageSquare className="w-4 h-4 text-cyan-400" /> },
+        ];
+    }
+  };
 
-  const navTabs = allNavTabs.filter((tab) => tab.roles.includes(user.role));
+  const navTabs = getNavTabsForRole(user.role);
 
   // Auto fallback if active tab is disallowed for current role
   useEffect(() => {
@@ -615,83 +674,214 @@ export default function App() {
       {/* Active Tab View Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        {activeTab === 'dashboard' && (
-          <DashboardOverview
-            farm={activeFarm}
-            weather={weather}
-            recommendations={recommendations}
-            onOpenAssistant={() => setShowAssistant(true)}
-            onOpenMap={() => setActiveTab('map')}
-            onOpenWhatIf={() => setActiveTab('whatif')}
-            onOpenReportModal={() => setActiveTab('community')}
-            onOpenNewFarmModal={() => setShowNewFarmModal(true)}
-          />
+        {/* FARMER ROLE VIEWS */}
+        {user.role === 'farmer' && (
+          <>
+            {activeTab === 'dashboard' && (
+              <FarmerDashboard
+                user={user}
+                farm={activeFarm}
+                weather={weather}
+                recommendations={recommendations}
+                reports={reports}
+                onNavigate={(tab) => setActiveTab(tab as any)}
+                onOpenAssistant={() => setShowAssistant(true)}
+                onOpenNewFarmModal={() => setShowNewFarmModal(true)}
+              />
+            )}
+            {activeTab === 'my_farms' && (
+              <MyFarms
+                activeFarm={activeFarm}
+                farms={farms}
+                onSelectFarm={setActiveFarm}
+                onOpenNewFarmModal={() => setShowNewFarmModal(true)}
+                onOpenLivestockModal={() => setShowLivestockModal(true)}
+                onDeleteFarm={handleDeleteFarm}
+              />
+            )}
+            {activeTab === 'advisory' && (
+              <SmartAdvisory
+                activeFarm={activeFarm}
+                recommendations={recommendations}
+                onStatusChange={handleRecommendationStatusChange}
+                onRefreshAI={handleRefreshAI}
+                isGeneratingAI={isGeneratingAI}
+                onOpenNewFarmModal={() => setShowNewFarmModal(true)}
+                onDeleteRecommendation={handleDeleteRecommendation}
+              />
+            )}
+            {activeTab === 'risk_alerts' && (
+              <RiskAlerts
+                predictions={predictions}
+                reports={reports}
+                onDeletePrediction={handleDeletePrediction}
+              />
+            )}
+            {activeTab === 'community' && (
+              <CommunityIntel
+                reports={reports}
+                user={user}
+                onAddReport={handleAddReport}
+                onUpvoteReport={handleUpvoteReport}
+                onVerifyReport={handleVerifyReport}
+                onDeleteReport={handleDeleteReport}
+              />
+            )}
+            {activeTab === 'markets' && (
+              <MarketPrices markets={markets} />
+            )}
+            {activeTab === 'settings' && (
+              <FarmerSettings
+                user={user}
+                onOpenSettingsModal={() => setShowSettingsModal(true)}
+              />
+            )}
+            {activeTab === 'support' && (
+              <FarmerSupport
+                onOpenDocModal={() => setShowDocModal(true)}
+              />
+            )}
+          </>
         )}
 
-        {activeTab === 'recommendations' && (
-          <SmartRecommendations
-            farm={activeFarm}
-            recommendations={recommendations.filter((r) => !activeFarm || r.farmId === activeFarm.id)}
-            onStatusChange={handleRecommendationStatusChange}
-            onRefreshAI={handleRefreshAI}
-            isGeneratingAI={isGeneratingAI}
-            onOpenNewFarmModal={() => setShowNewFarmModal(true)}
-            onDeleteRecommendation={handleDeleteRecommendation}
-          />
+        {/* EXTENSION OFFICER ROLE VIEWS */}
+        {user.role === 'extension_officer' && (
+          <>
+            {activeTab === 'dashboard' && (
+              <ExtensionDashboard
+                user={user}
+                farms={farms}
+                reports={reports}
+                predictions={predictions}
+                onNavigate={(tab) => setActiveTab(tab as any)}
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message)}
+              />
+            )}
+            {activeTab === 'regional_farms' && (
+              <RegionalFarms farms={farms} user={user} />
+            )}
+            {activeTab === 'broadcast' && (
+              <BroadcastDispatcher
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message)}
+              />
+            )}
+            {activeTab === 'field_advisory' && (
+              <FieldAdvisory
+                activeFarm={activeFarm}
+                recommendations={recommendations}
+                onStatusChange={handleRecommendationStatusChange}
+                onRefreshAI={handleRefreshAI}
+                isGeneratingAI={isGeneratingAI}
+              />
+            )}
+            {activeTab === 'outbreak_radar' && (
+              <PestOutbreakRadar predictions={predictions} reports={reports} />
+            )}
+            {activeTab === 'simulations' && (
+              <ExtensionSimulations activeFarm={activeFarm} />
+            )}
+            {activeTab === 'settings' && (
+              <ExtensionSettings
+                user={user}
+                onOpenSettingsModal={() => setShowSettingsModal(true)}
+              />
+            )}
+            {activeTab === 'support' && (
+              <ExtensionSupport
+                onOpenDocModal={() => setShowDocModal(true)}
+              />
+            )}
+          </>
         )}
 
-        {activeTab === 'map' && (
-          <InteractiveMap
-            activeFarm={activeFarm}
-            farms={farms}
-            reports={reports}
-            markets={markets}
-            onRequestNewReport={() => setActiveTab('community')}
-          />
+        {/* NGO ROLE VIEWS */}
+        {user.role === 'ngo' && (
+          <>
+            {activeTab === 'dashboard' && (
+              <NGODashboard
+                user={user}
+                farms={farms}
+                weather={weather}
+                reports={reports}
+                onNavigate={(tab) => setActiveTab(tab as any)}
+              />
+            )}
+            {activeTab === 'gis_map' && (
+              <ClimateGISMap farms={farms} reports={reports} user={user} />
+            )}
+            {activeTab === 'vulnerability' && (
+              <VulnerabilityAnalytics weather={weather} farms={farms} />
+            )}
+            {activeTab === 'simulator' && (
+              <ClimateSimulator activeFarm={activeFarm} />
+            )}
+            {activeTab === 'reports' && (
+              <NGOCommunityReports reports={reports} user={user} />
+            )}
+            {activeTab === 'markets' && (
+              <MarketTrends markets={markets} />
+            )}
+            {activeTab === 'settings' && (
+              <NGOSettings
+                user={user}
+                onOpenSettingsModal={() => setShowSettingsModal(true)}
+              />
+            )}
+            {activeTab === 'support' && (
+              <NGOSupport
+                onOpenDocModal={() => setShowDocModal(true)}
+              />
+            )}
+          </>
         )}
 
-        {activeTab === 'community' && (
-          <CommunityIntel
-            reports={reports}
-            onAddReport={handleAddReport}
-            onUpvoteReport={handleUpvoteReport}
-            onVerifyReport={handleVerifyReport}
-            isExtensionOfficer={user.role === 'extension_officer' || user.role === 'admin'}
-            onRequestOpenMapWithReport={() => setActiveTab('map')}
-            onDeleteReport={handleDeleteReport}
-          />
-        )}
-
-        {activeTab === 'risk_prediction' && (
-          <AIRiskPrediction
-            predictions={predictions}
-            onDeletePrediction={handleDeletePrediction}
-          />
-        )}
-
-        {activeTab === 'whatif' && (
-          <WhatIfSimulator farm={activeFarm} />
-        )}
-
-        {activeTab === 'markets' && (
-          <MarketIntelligence
-            markets={markets}
-            onDeleteMarketPrice={handleDeleteMarketPrice}
-          />
-        )}
-
-        {activeTab === 'admin' && (
-          <AdminExtensionDashboard
-            currentUser={user}
-            usersList={usersList}
-            farms={farms}
-            reports={reports}
-            onVerifyReport={handleVerifyReport}
-            onSendBroadcast={handleSendBroadcast}
-            onAddUser={handleAddUser}
-            onUpdateUserRole={handleUpdateUserRole}
-            onDeleteUser={handleDeleteUser}
-          />
+        {/* ADMIN ROLE VIEWS */}
+        {user.role === 'admin' && (
+          <>
+            {activeTab === 'dashboard' && (
+              <AdminDashboard
+                user={user}
+                usersList={usersList}
+                farms={farms}
+                reports={reports}
+                predictions={predictions}
+                onNavigate={(tab) => setActiveTab(tab as any)}
+              />
+            )}
+            {activeTab === 'users' && (
+              <UserManagement
+                user={user}
+                usersList={usersList}
+                onUpdateRole={handleUpdateUserRole}
+                onDeleteProfile={handleDeleteUser}
+              />
+            )}
+            {activeTab === 'broadcast' && (
+              <SystemBroadcast
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message)}
+              />
+            )}
+            {activeTab === 'risk' && (
+              <RiskAnalytics predictions={predictions} />
+            )}
+            {activeTab === 'db_monitor' && (
+              <DatabaseMonitor />
+            )}
+            {activeTab === 'market_admin' && (
+              <MarketAdmin markets={markets} />
+            )}
+            {activeTab === 'settings' && (
+              <AdminSettings
+                user={user}
+                onOpenSettingsModal={() => setShowSettingsModal(true)}
+              />
+            )}
+            {activeTab === 'support' && (
+              <AdminSupport
+                onOpenDocModal={() => setShowDocModal(true)}
+              />
+            )}
+          </>
         )}
 
       </main>

@@ -14,6 +14,8 @@ import {
   AlertCircle,
   HelpCircle,
   Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { AgriShieldLogoFull } from './AgriShieldLogo';
 import { UserProfile, UserRole } from '../types';
@@ -58,11 +60,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Login Form State
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // Sign Up Form State (Default role is farmer)
   const [fullName, setFullName] = useState('');
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [phone, setPhone] = useState('');
   const [county, setCounty] = useState('Uasin Gishu');
   const [role, setRole] = useState<UserRole>('farmer');
@@ -317,13 +321,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="relative">
                   <Lock className="w-4 h-4 text-stone-500 absolute left-3 top-3" />
                   <input
-                    type="password"
+                    type={showLoginPassword ? 'text' : 'password'}
                     required
                     placeholder="Enter your account password (e.g. 123456)"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 placeholder-stone-600 focus:outline-none focus:border-emerald-500 font-medium"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 placeholder-stone-600 focus:outline-none focus:border-emerald-500 font-medium"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-3 top-2.5 text-stone-400 hover:text-stone-200 p-1 transition-colors"
+                    title={showLoginPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -369,15 +381,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                 <div>
                   <label className="block text-stone-300 font-bold mb-1">Password *</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    placeholder="Min 6 characters"
-                    value={signUpPassword}
-                    onChange={(e) => setSignUpPassword(e.target.value)}
-                    className="w-full p-2 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 focus:border-emerald-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showSignUpPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      placeholder="Min 6 characters"
+                      value={signUpPassword}
+                      onChange={(e) => setSignUpPassword(e.target.value)}
+                      className="w-full pl-3 pr-9 py-2 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 focus:border-emerald-500 font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                      className="absolute right-2 top-2 text-stone-400 hover:text-stone-200 p-0.5 transition-colors"
+                      title={showSignUpPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showSignUpPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

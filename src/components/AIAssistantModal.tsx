@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Farm, WeatherSummary, ChatMessage, CommunityReport } from '../types';
+import { askGeminiAssistant } from '../services/geminiService';
 import {
   Sparkles,
   Send,
@@ -75,51 +76,63 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/gemini/assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      let data: { reply: string; quickActions?: string[] } | null = null;
+
+      try {
+        const res = await fetch('/api/gemini/assistant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            farm,
+            question: q,
+            weather,
+            recentReports: reports,
+            chatHistory: messages,
+          }),
+        });
+
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (e) {
+        console.warn('Backend API fetch failed, switching to client AI assistant:', e);
+      }
+
+      // If backend API didn't return a reply (e.g. on Vercel static deployment or serverless delay), use client Gemini service
+      if (!data || !data.reply) {
+        data = await askGeminiAssistant({
           farm,
           question: q,
           weather,
           recentReports: reports,
           chatHistory: messages,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const aiMsg: ChatMessage = {
-          id: `ai-${Date.now()}`,
-          sender: 'ai',
-          text: data.reply,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          quickActions: data.quickActions,
-        };
-        setMessages((prev) => [...prev, aiMsg]);
-      } else {
-        throw new Error('API server error');
+        });
       }
+
+      const aiMsg: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        sender: 'ai',
+        text: data.reply,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        quickActions: data.quickActions,
+      };
+      setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
       console.error('Chat error:', err);
-      const qLower = q.toLowerCase();
-      const crop = farm?.cropType || 'Maize';
-      let fallbackText = '';
-      if (qLower.includes('hi') || qLower.includes('hello') || qLower.includes('jambo')) {
-        fallbackText = `Jambo! I am your AgriShield AI Agronomist. Today's forecast for your ${crop} farm in ${farm?.locationName || 'Kenya'} shows **${weather.currentTemp}°C** with **${weather.rainfallMm}mm rain** expected.\n\nHow can I help you protect your crops or livestock today?`;
-      } else if (qLower.includes('armyworm') || qLower.includes('pest') || qLower.includes('disease')) {
-        fallbackText = `### 🐛 Pest Control Advisory for ${crop}\n\n1. **Scout Leaf Whorls**: Inspect 20 plants across 5 field sections for feeding holes or frass.\n2. **Targeted Application**: Apply neem oil or bio-pesticides early morning before heat peaks.\n3. **Rain Precaution**: Avoid spraying right before heavy downpours (${weather.rainfallMm}mm forecast).`;
-      } else if (qLower.includes('harvest') || qLower.includes('cut') || qLower.includes('downpour')) {
-        fallbackText = `### 🌾 Harvest & Downpour Protection\n\n1. **Early Harvest**: Harvest physiologically mature ears now to avoid cob rot from ${weather.rainfallMm}mm expected rain.\n2. **Drying Tarps**: Use elevated canvas or plastic tarps off wet soil.\n3. **Drainage**: Clear runoff channels along crop rows.`;
-      } else {
-        fallbackText = `Based on current soil moisture (${weather.soilMoisturePercent}%) and upcoming rain (${weather.rainfallMm}mm):\n\n• **Irrigation**: Hold off on artificial watering.\n• **Fertilizer**: Delay top-dressing until heavy rain subsides to prevent nitrogen leaching.\n• **Drainage**: Clear field ditches to prevent root rot.`;
-      }
+      const fallbackData = await askGeminiAssistant({
+        farm,
+        question: q,
+        weather,
+        recentReports: reports,
+        chatHistory: messages,
+      });
 
       const fallbackMsg: ChatMessage = {
         id: `ai-err-${Date.now()}`,
         sender: 'ai',
-        text: fallbackText,
+        text: fallbackData.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        quickActions: fallbackData.quickActions,
       };
       setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
@@ -139,10 +152,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="font-bold text-sm text-stone-100">AgriShield AI Farming Assistant</h3>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">
-                  Gemini 3.6
-                </span>
+                <h3 className="font-bold text-sm text-stone-100">AgriShield AI Advisor</h3>
               </div>
               <p className="text-[11px] text-stone-400">
                 Aware of {farmName} • {cropType} • {weather.currentTemp}°C Rain: {weather.rainfallMm}mm
@@ -235,7 +245,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
               type="text"
               value={inputQuestion}
               onChange={(e) => setInputQuestion(e.target.value)}
-              placeholder={`Ask Gemini about ${cropType}, rainfall, fertilizer, or armyworm protection...`}
+              placeholder={`Ask about ${cropType}, rainfall, fertilizer, or pest protection...`}
               className="flex-1 bg-stone-900 border border-stone-700 rounded-xl px-3.5 py-2.5 text-xs text-stone-100 placeholder-stone-500 focus:outline-none focus:border-emerald-500"
             />
             <button

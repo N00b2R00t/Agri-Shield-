@@ -181,6 +181,7 @@ export default function App() {
   >('dashboard');
 
   const [showAssistant, setShowAssistant] = useState(false);
+  const [assistantInitialQuestion, setAssistantInitialQuestion] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showNewFarmModal, setShowNewFarmModal] = useState(false);
@@ -691,12 +692,17 @@ export default function App() {
             )}
             {activeTab === 'my_farms' && (
               <MyFarms
+                user={user}
                 activeFarm={activeFarm}
                 farms={farms}
                 onSelectFarm={setActiveFarm}
-                onOpenNewFarmModal={() => setShowNewFarmModal(true)}
+                onOpenNewFarm={() => setShowNewFarmModal(true)}
                 onOpenLivestockModal={() => setShowLivestockModal(true)}
-                onDeleteFarm={handleDeleteFarm}
+                onOpenAssistantWithQuestion={(question, farm) => {
+                  if (farm) setActiveFarm(farm);
+                  setAssistantInitialQuestion(question || null);
+                  setShowAssistant(true);
+                }}
               />
             )}
             {activeTab === 'advisory' && (
@@ -907,10 +913,14 @@ export default function App() {
 
       <AIAssistantModal
         isOpen={showAssistant}
-        onClose={() => setShowAssistant(false)}
+        onClose={() => {
+          setShowAssistant(false);
+          setAssistantInitialQuestion(null);
+        }}
         farm={activeFarm}
         weather={weather}
         reports={reports}
+        initialQuestion={assistantInitialQuestion}
       />
 
       <FarmerProfileModal

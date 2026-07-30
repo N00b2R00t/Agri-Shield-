@@ -419,12 +419,70 @@ ${reportsContext}`;
 
     const isGreeting = greetingKeywords.some((kw) => queryLower.includes(kw)) || queryLower.length < 10;
 
-    if (isGreeting) {
-      replyText = `Jambo / Habari yako! I am your AgriShield AI Agronomist. I'm actively monitoring your farm in ${farm?.locationName || 'Kenya'} (${crop}, ${livestock}).\n\nToday's micro-climate summary: **${temp}°C**, **${rain}mm expected rain**, and soil moisture at **${moisture}%**.\n\nHow can I help you optimize your crop yields or protect your livestock today?`;
+    if (
+      queryLower.includes('agrishield') ||
+      queryLower.includes('agri-shield') ||
+      queryLower.includes('what is agrishield') ||
+      queryLower.includes('what does agrishield do') ||
+      queryLower.includes('about agrishield') ||
+      queryLower.includes('who built') ||
+      queryLower.includes('who created') ||
+      queryLower.includes('developer')
+    ) {
+      replyText = `### 🌾 About AgriShield AI Platform\n\n**AgriShield** is an intelligent climate resilience, early-warning, and decision-support platform designed for African smallholder farmers, extension officers, NGOs, and system admins.\n\n**Key Capabilities**:\n1. **AI Farm Advisory**: Personalized crop and livestock advice powered by Gemini AI and real-time Open-Meteo climate models.\n2. **Multi-Farm Plot Management**: Register multiple farm plots across all 47 Kenyan counties with custom crop types, growth stages, soil composition, and livestock count.\n3. **Community Outbreak Radar**: Crowdsourced pest and disease reports (e.g. Fall Armyworm, Locusts) with instant radius alerts.\n4. **What-If Climate Simulator**: Stress-test your plots against severe weather events (floods, heatwaves, droughts).\n5. **Market Intelligence**: Real-time wholesale crop prices across major Kenyan market hubs and post-harvest storage guidance.\n6. **Multi-Role Perspectives**: Tailored dashboards for Farmers, Field Extension Officers, NGO Specialists, and System Admins.\n\nDeveloped by **Ian Chirchir** to safeguard food security and empower smallholders against climate vulnerability!`;
       fallbackQuickActions = [
-        `Should I harvest early before the heavy rain?`,
-        `How do I prevent pest infestations?`,
-        `What is my farm's heat stress index?`,
+        `How do I register a new farm?`,
+        `How to submit a pest outbreak report?`,
+        `How to switch user roles?`,
+      ];
+    } else if (
+      queryLower.includes('register farm') ||
+      queryLower.includes('add farm') ||
+      queryLower.includes('how to register') ||
+      queryLower.includes('how to add farm') ||
+      queryLower.includes('register a farm') ||
+      queryLower.includes('new farm') ||
+      queryLower.includes('create farm')
+    ) {
+      replyText = `### 🚜 How to Register & Manage Farms on AgriShield\n\nRegistering a farm plot unlocks hyper-local micro-climate monitoring and AI-driven crop & livestock advisory:\n\n1. **Step 1**: Click the **"+ Add New Farm"** button in the top navigation bar, the farm switcher dropdown, or the **My Farms** tab.\n2. **Step 2**: Enter your **Farm Name** (e.g. *Eldoret Pioneer Maize & Dairy Farm*).\n3. **Step 3**: Select your **County** (all 47 Kenya counties supported) and enter your sub-county/village.\n4. **Step 4**: Choose your **Farming Enterprise Type** (*Mixed Enterprise, Crops Only, or Livestock Only*).\n5. **Step 5**: Select your primary **Crop Type** (e.g., *Maize, Beans, Tea, Coffee, Wheat, Vegetables*), growth stage, soil type, irrigation method, and acreage.\n6. **Step 6**: If keeping animals, enter your **Livestock Type** (*Dairy Cattle, Goats, Poultry, Sheep*) and head count.\n7. **Step 7**: Click **"Save Farm Location"**. Your farm is immediately saved and actively analyzed by Gemini AI!\n\n*Tip*: You can register multiple farms and run AI analysis on each of them!`;
+      fallbackQuickActions = [
+        `How do I analyze my farm with AI?`,
+        `How to report a pest outbreak on my farm?`,
+        `What does AgriShield do?`,
+      ];
+    } else if (
+      queryLower.includes('report outbreak') ||
+      queryLower.includes('submit report') ||
+      queryLower.includes('community report') ||
+      queryLower.includes('outbreak radar') ||
+      queryLower.includes('pest report')
+    ) {
+      replyText = `### 🐛 How to Submit a Community Outbreak Report\n\n1. **Step 1**: Click **"Report Outbreak"** in the top navigation bar or switch to the **Community Intel** tab.\n2. **Step 2**: Select the observed pest or disease type (*Fall Armyworm, Locusts, Maize Lethal Necrosis, Coffee Rust, Anthracnose, etc.*).\n3. **Step 3**: Select the affected crop and threat severity level (*Low, Medium, High, Critical*).\n4. **Step 4**: Provide field notes, description, and optional photo attachment.\n5. **Step 5**: Click **"Submit Community Outbreak Alert"**. Neighboring farmers and extension officers within a 25km radius will receive instant alerts on their pest radar!`;
+      fallbackQuickActions = [
+        `How to protect crops from Fall Armyworm?`,
+        `How do extension officers verify reports?`,
+        `How to register a farm?`,
+      ];
+    } else if (
+      queryLower.includes('role') ||
+      queryLower.includes('extension officer') ||
+      queryLower.includes('ngo') ||
+      queryLower.includes('switch role') ||
+      queryLower.includes('change role') ||
+      queryLower.includes('admin')
+    ) {
+      replyText = `### 🔒 AgriShield User Roles & Access Policy\n\nAgriShield offers 4 specialized role perspectives:\n\n1. **Smallholder Farmer**: Farm plot management, AI agronomy advice, fertilizer schedules, and market prices.\n2. **Extension Officer**: Regional farmer directory, field dispatch, pest outbreak verification, and farm visit logs.\n3. **NGO / Climate Specialist**: Regional GIS climate vulnerability analytics, drought indicator mapping, and community support tools.\n4. **Gov / System Admin**: User account management, database synchronization, system broadcast alerts, and market price updates.\n\n⚠️ **Role Change Policy**:\n- **Non-Admin Users**: Standard users cannot change their role directly.\n- **How to Request a Role Change**: To request a role upgrade or change, please contact System Admin (**Ian Kipkoech Chirchir**) directly via **WhatsApp Support (+254 143 791 311)** or through the in-app **Support** tab.\n- **System Admins**: Only authorized Admins can modify account role permissions.`;
+      fallbackQuickActions = [
+        `How to contact WhatsApp Support for role change?`,
+        `How to register a new farm?`,
+        `What does AgriShield do?`,
+      ];
+    } else if (isGreeting) {
+      replyText = `Jambo / Habari yako! I am your AgriShield AI Agronomist. I'm actively monitoring your farm in ${farm?.locationName || 'Kenya'} (${crop}, ${livestock}).\n\nToday's micro-climate summary: **${temp}°C**, **${rain}mm expected rain**, and soil moisture at **${moisture}%**.\n\nHow can I help you optimize your crop yields, protect your livestock, or assist with AgriShield features today?`;
+      fallbackQuickActions = [
+        `What does AgriShield do?`,
+        `How to register a new farm?`,
+        `Should I harvest early before heavy rain?`,
       ];
     } else if (queryLower.includes('armyworm') || queryLower.includes('pest') || queryLower.includes('insect') || queryLower.includes('worm') || queryLower.includes('disease') || queryLower.includes('rust')) {
       replyText = `### 🐛 Fall Armyworm & Pest Risk Advisory for ${crop}\n\nWith humidity at **${weather?.humidity || 76}%** and nearby pest reports within 2.1 km, here is your immediate field protection plan:\n\n1. **Early Scouting**: Inspect leaf whorls of 20 consecutive plants in 5 different field sections. Look for window-pane feeding damage or fresh frass.\n2. **Biological & Chemical Control**: Apply neem oil extract or recommended IPM bio-pesticide (e.g. *Bacillus thuringiensis* or Emamectin Benzoate) early morning or late evening when larvae actively feed.\n3. **Rain Impact**: Since **${rain}mm of rain** is forecast, apply a rain-fast sticker/spreader to prevent pesticide wash-off.\n\n• **Action Items**: Clear weed harbors on field borders and avoid applying pesticide during active rainfall.`;

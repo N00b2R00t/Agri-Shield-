@@ -19,6 +19,7 @@ interface AIAssistantModalProps {
   farm?: Farm | null;
   weather: WeatherSummary;
   reports: CommunityReport[];
+  initialQuestion?: string | null;
 }
 
 export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
@@ -27,6 +28,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   farm,
   weather,
   reports,
+  initialQuestion,
 }) => {
   const farmName = farm?.name || 'Your Farm Sector';
   const cropType = farm?.cropType || 'Crops & Livestock';
@@ -37,13 +39,13 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
     {
       id: 'msg-0',
       sender: 'ai',
-      text: `Jambo Farmer! I am your AgriShield AI Agronomist. I have reviewed ${farmName} (${cropType}, ${growthStage}) in ${locationName}.\n\nWith today's forecast showing **${weather.rainfallMm}mm rain (${weather.rainfallProb}% chance)** and humidity at **${weather.humidity}%**, how can I assist your farming decisions today?`,
+      text: `Jambo Farmer! I am your AgriShield AI Advisor. I am actively monitoring ${farmName} (${cropType}, ${growthStage}) in ${locationName}.\n\nForecast today: **${weather.rainfallMm}mm rain (${weather.rainfallProb}% chance)**, Temp **${weather.currentTemp}°C**, Humidity **${weather.humidity}%**.\n\nI can help you with **Farm Advisory** (crops, fertilizer, pests, harvest) OR **AgriShield Platform Support** (how to register farms, submit reports, role switching). How can I assist you today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       quickActions: [
+        `What does AgriShield do?`,
+        `How do I register a new farm?`,
         `Should I irrigate my ${cropType} today?`,
-        `When should I top-dress nitrogen fertilizer?`,
-        `Nearby Armyworm reported: how do I protect my field?`,
-        `Should I harvest early before the heavy downpour?`,
+        `How to report a pest outbreak?`,
       ],
     },
   ]);
@@ -51,12 +53,20 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   const [inputQuestion, setInputQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  const handledInitialQuestionRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    if (isOpen && initialQuestion && handledInitialQuestionRef.current !== initialQuestion) {
+      handledInitialQuestionRef.current = initialQuestion;
+      handleSendMessage(initialQuestion);
+    }
+  }, [isOpen, initialQuestion]);
 
   if (!isOpen) return null;
 
@@ -166,6 +176,41 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
             className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
           >
             <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Quick Topics Bar */}
+        <div className="px-4 py-2 bg-stone-900 border-b border-stone-800 flex items-center space-x-2 overflow-x-auto text-[11px] text-stone-300 scrollbar-none shrink-0">
+          <span className="font-bold text-emerald-400 shrink-0 uppercase tracking-wider text-[10px]">Quick Help:</span>
+          <button
+            onClick={() => handleSendMessage('What does AgriShield do?')}
+            className="px-2.5 py-1 rounded-full bg-stone-800 hover:bg-stone-700 border border-stone-700 shrink-0 text-stone-200 font-medium transition-colors"
+          >
+            🌾 What is AgriShield?
+          </button>
+          <button
+            onClick={() => handleSendMessage('How to register a farm?')}
+            className="px-2.5 py-1 rounded-full bg-stone-800 hover:bg-stone-700 border border-stone-700 shrink-0 text-stone-200 font-medium transition-colors"
+          >
+            🚜 Register Farm
+          </button>
+          <button
+            onClick={() => handleSendMessage(`Analyze ${cropType} conditions for ${farmName}`)}
+            className="px-2.5 py-1 rounded-full bg-stone-800 hover:bg-stone-700 border border-stone-700 shrink-0 text-emerald-300 font-medium transition-colors"
+          >
+            ✨ AI Farm Analysis
+          </button>
+          <button
+            onClick={() => handleSendMessage('How to report a pest outbreak?')}
+            className="px-2.5 py-1 rounded-full bg-stone-800 hover:bg-stone-700 border border-stone-700 shrink-0 text-amber-300 font-medium transition-colors"
+          >
+            🐛 Submit Outbreak
+          </button>
+          <button
+            onClick={() => handleSendMessage('How to switch roles (Extension Officer / NGO / Admin)?')}
+            className="px-2.5 py-1 rounded-full bg-stone-800 hover:bg-stone-700 border border-stone-700 shrink-0 text-blue-300 font-medium transition-colors"
+          >
+            👥 Switch Roles
           </button>
         </div>
 

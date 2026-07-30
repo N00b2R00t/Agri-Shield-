@@ -169,12 +169,34 @@ ${weatherContext}`;
   }
 
   // Fallback if AI key not provided on Vercel environment
+  const qLower = (question || '').toLowerCase().trim();
   const crop = farm?.cropType || 'Maize';
+  const livestock = farm?.livestockType || 'Dairy Cattle';
   const rain = weather?.rainfallMm || 12;
   const temp = weather?.currentTemp || 25;
+  const moisture = weather?.soilMoisturePercent || 65;
+
+  const greetingKeywords = [
+    'hi', 'hello', 'hey', 'jambo', 'habari', 'mambo', 'sasa', 'vipi', 'salama',
+    'niaje', 'my man', 'bro', 'dude', 'good morning', 'good afternoon', 'good evening',
+    'how are you', 'sup', 'what\'s up', 'whats up', 'howdy', 'greetings', 'asante', 'shukran'
+  ];
+
+  const isGreeting = greetingKeywords.some((kw) => qLower.includes(kw)) || qLower.length < 10;
+
+  if (isGreeting) {
+    return res.json({
+      reply: `Jambo / Habari yako! I am your AgriShield AI Advisor. I am actively monitoring your farm in ${farm?.locationName || 'Kenya'} (${crop}, ${livestock}).\n\nToday's micro-climate summary:\n• **Temperature**: ${temp}°C\n• **Rainfall**: ${rain}mm expected\n• **Soil Moisture**: ${moisture}%\n\nHow can I help you optimize your crop yields or protect your livestock today?`,
+      quickActions: [
+        `Should I harvest early before rain?`,
+        `How to protect ${crop} from armyworms?`,
+        `Best top-dressing timing for ${crop}?`,
+      ],
+    });
+  }
 
   res.json({
-    reply: `### 🌾 AgriShield AI Advisory for ${crop}\n\n• **Forecast**: ${temp}°C with ${rain}mm expected rain.\n• **Pest Advisory**: High humidity increases Fall Armyworm risk. Scout whorls early morning.\n• **Fertilizer**: Delay CAN top-dressing until heavy rain subsides to avoid nutrient leaching.\n• **Drainage**: Ensure field runoff channels are clear.`,
+    reply: `Thank you for asking about **"${question}"**!\n\nHere is your tailored agricultural advice for ${farm?.name || 'your farm'} (${crop}):\n\n1. **Micro-Climate Status**: Current conditions show **${temp}°C**, **${rain}mm expected rain**, and soil moisture at **${moisture}%**.\n2. **Field Recommendations**: Maintain proper plot drainage and inspect plants for early pest or disease symptoms.\n3. **Seasonal Planning**: Schedule major farm operations (spraying, harvesting, top-dressing) around upcoming rain windows.\n\nHow else can I assist with your ${crop} crops or livestock?`,
     quickActions: [
       `Should I harvest early before rain?`,
       `How to protect ${crop} from armyworms?`,

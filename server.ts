@@ -410,14 +410,23 @@ ${reportsContext}`;
       `When to top-dress fertilizer given ${rain}mm rain?`,
     ];
 
-    if (queryLower.includes('hi') || queryLower.includes('hello') || queryLower.includes('jambo') || queryLower.includes('hey')) {
-      replyText = `Jambo! I am your AgriShield AI Agronomist. I'm actively monitoring your farm in ${farm?.locationName || 'Kenya'} (${crop}, ${farm?.growthStage || 'Active Season'}).\n\nToday's micro-climate summary: **${temp}°C**, **${rain}mm expected rain**, and soil moisture at **${moisture}%**.\n\nHow can I help you optimize your crop yields or protect your livestock today?`;
+    // Comprehensive list of Swahili & English greetings
+    const greetingKeywords = [
+      'hi', 'hello', 'hey', 'jambo', 'habari', 'mambo', 'sasa', 'vipi', 'salama',
+      'niaje', 'my man', 'bro', 'dude', 'good morning', 'good afternoon', 'good evening',
+      'how are you', 'sup', 'what\'s up', 'whats up', 'howdy', 'greetings', 'asante', 'shukran'
+    ];
+
+    const isGreeting = greetingKeywords.some((kw) => queryLower.includes(kw)) || queryLower.length < 10;
+
+    if (isGreeting) {
+      replyText = `Jambo / Habari yako! I am your AgriShield AI Agronomist. I'm actively monitoring your farm in ${farm?.locationName || 'Kenya'} (${crop}, ${livestock}).\n\nToday's micro-climate summary: **${temp}°C**, **${rain}mm expected rain**, and soil moisture at **${moisture}%**.\n\nHow can I help you optimize your crop yields or protect your livestock today?`;
       fallbackQuickActions = [
         `Should I harvest early before the heavy rain?`,
         `How do I prevent pest infestations?`,
         `What is my farm's heat stress index?`,
       ];
-    } else if (queryLower.includes('armyworm') || queryLower.includes('pest') || queryLower.includes('insect') || queryLower.includes('worm') || queryLower.includes('disease')) {
+    } else if (queryLower.includes('armyworm') || queryLower.includes('pest') || queryLower.includes('insect') || queryLower.includes('worm') || queryLower.includes('disease') || queryLower.includes('rust')) {
       replyText = `### 🐛 Fall Armyworm & Pest Risk Advisory for ${crop}\n\nWith humidity at **${weather?.humidity || 76}%** and nearby pest reports within 2.1 km, here is your immediate field protection plan:\n\n1. **Early Scouting**: Inspect leaf whorls of 20 consecutive plants in 5 different field sections. Look for window-pane feeding damage or fresh frass.\n2. **Biological & Chemical Control**: Apply neem oil extract or recommended IPM bio-pesticide (e.g. *Bacillus thuringiensis* or Emamectin Benzoate) early morning or late evening when larvae actively feed.\n3. **Rain Impact**: Since **${rain}mm of rain** is forecast, apply a rain-fast sticker/spreader to prevent pesticide wash-off.\n\n• **Action Items**: Clear weed harbors on field borders and avoid applying pesticide during active rainfall.`;
       fallbackQuickActions = [
         `What pesticide dosage is safe for ${crop}?`,
@@ -431,29 +440,36 @@ ${reportsContext}`;
         `What are current market prices for early harvest ${crop}?`,
         `How to prevent aflatoxin during wet harvests?`,
       ];
-    } else if (queryLower.includes('fertilizer') || queryLower.includes('nitrogen') || queryLower.includes('top-dress') || queryLower.includes('topdress') || queryLower.includes('can') || queryLower.includes('dap')) {
+    } else if (queryLower.includes('fertilizer') || queryLower.includes('nitrogen') || queryLower.includes('top-dress') || queryLower.includes('topdress') || queryLower.includes('can') || queryLower.includes('dap') || queryLower.includes('manure')) {
       replyText = `### 🧪 Fertilizer & Top-Dressing Guidance for ${crop}\n\nGiven current soil moisture (**${moisture}%**) and expected rain (**${rain}mm**):\n\n1. **Timing Advisory**: Delay CAN/Urea top-dressing by 24–48 hours until heavy downpours subside. Applying fertilizer right before heavy rain causes severe nitrogen leaching into deeper subsoil.\n2. **Application Technique**: Band fertilizer 5–7 cm away from plant stems and lightly cover with soil to minimize volatilization.\n3. **Soil Conditions**: Ensure soil is moist but not waterlogged before top-dressing.`;
       fallbackQuickActions = [
         `How many kg of CAN fertilizer per acre for ${crop}?`,
         `Should I mix fertilizer with organic manure?`,
         `Signs of nitrogen deficiency in ${crop}?`,
       ];
-    } else if (queryLower.includes('irrigate') || queryLower.includes('water') || queryLower.includes('dry') || queryLower.includes('drought')) {
+    } else if (queryLower.includes('irrigate') || queryLower.includes('water') || queryLower.includes('dry') || queryLower.includes('drought') || queryLower.includes('sun')) {
       replyText = `### 💧 Irrigation & Water Management Strategy\n\nWith current soil moisture at **${moisture}%** and **${rain}mm of expected rainfall**:\n\n1. **Irrigation Schedule**: Hold off on artificial irrigation for the next 3 days. Soil moisture is currently adequate.\n2. **Rainwater Harvesting**: Direct farm runoff into farm ponds or underground water pans to store water for upcoming dry spells.\n3. **Mulching**: Apply crop residue mulch between rows to conserve soil moisture when sunny conditions return.`;
       fallbackQuickActions = [
         `When should I resume irrigation for ${crop}?`,
         `How to build a drip irrigation system on a small budget?`,
         `How to check soil moisture without sensors?`,
       ];
-    } else if (queryLower.includes('livestock') || queryLower.includes('cow') || queryLower.includes('cattle') || queryLower.includes('milk') || queryLower.includes('thi') || queryLower.includes('heat')) {
+    } else if (queryLower.includes('livestock') || queryLower.includes('cow') || queryLower.includes('cattle') || queryLower.includes('milk') || queryLower.includes('thi') || queryLower.includes('heat') || queryLower.includes('goat')) {
       replyText = `### 🐄 Livestock Health & Heat Stress Advisory for ${livestock}\n\n1. **Heat Stress Control**: Maintain shaded loafing areas and provide cool, clean drinking water mixed with mineral salts.\n2. **Tick & Vector Prevention**: Inspect animals weekly for ticks around ears and udder. Spray with recommended acaricides.\n3. **Fodder Preservation**: Chop mature Napier grass and store in plastic silage bags or trench pits before heavy rain.`;
       fallbackQuickActions = [
         `How to make silage in plastic bags?`,
         `Symptoms of East Coast Fever in dairy cattle?`,
         `How to increase milk yield in warm weather?`,
       ];
+    } else if (queryLower.includes('price') || queryLower.includes('market') || queryLower.includes('sell') || queryLower.includes('cost') || queryLower.includes('shilling') || queryLower.includes('kes')) {
+      replyText = `### 📈 Market & Pricing Advisory for ${crop}\n\n1. **Market Price**: Current regional market price for ${crop} is KES 3,200 – 3,800 per 90kg bag.\n2. **Storage**: Use hermetic storage bags (e.g. PICS bags) to avoid selling at lower prices immediately after harvest.\n3. **Cooperatives**: Join local farmer groups to bulk sell produce for higher profits.`;
+      fallbackQuickActions = [
+        `Where to buy hermetic bags?`,
+        `How to join local farming cooperatives?`,
+        `Current market prices in nearest town?`,
+      ];
     } else {
-      replyText = `Based on your farm profile (${crop}, ${livestock}, ${farm?.growthStage || 'Active Season'}) and current micro-climate conditions (**${temp}°C**, **${rain}mm rain**, **${moisture}% soil moisture**):\n\n1. **Field Inspection**: Check field drainage channels to handle expected rain runoff.\n2. **Pest Monitoring**: Inspect crop foliage for early signs of Fall Armyworm or fungal leaf spots caused by high humidity (${weather?.humidity || 76}%).\n3. **Climate Action**: Hold off on fertilizer top-dressing until heavy rainfall eases to protect nutrient investments.`;
+      replyText = `Thank you for asking about **"${question}"**!\n\nHere is your tailored agricultural advice for ${farm?.name || 'your farm'} (${crop}):\n\n1. **Micro-Climate Status**: Current conditions show **${temp}°C**, **${rain}mm expected rain**, and soil moisture at **${moisture}%**.\n2. **Field Recommendations**: Maintain proper plot drainage and inspect plants for early pest or disease symptoms.\n3. **Seasonal Planning**: Schedule major farm operations (spraying, harvesting, top-dressing) around upcoming rain windows.\n\nHow else can I assist with your ${crop} crops or livestock?`;
     }
 
     res.json({ reply: replyText, quickActions: fallbackQuickActions });

@@ -12,7 +12,14 @@ function getClientAiInstance() {
 
     if (!apiKey || !apiKey.trim()) return null;
 
-    return new GoogleGenAI({ apiKey: apiKey.trim() });
+    return new GoogleGenAI({
+      apiKey: apiKey.trim(),
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    });
   } catch (err) {
     console.warn('Could not initialize Gemini client:', err);
     return null;
@@ -52,7 +59,7 @@ Context:
 - Weather: Temp ${temp}°C, Rain ${rain}mm, Humidity ${humidity}%, Soil Moisture ${moisture}%
 - Recent Reports: ${recentReports?.slice(0, 2).map((r) => r.description).join('; ') || 'None'}`;
 
-      const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
+      const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
 
       for (const mName of modelsToTry) {
         try {

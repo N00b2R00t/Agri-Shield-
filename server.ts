@@ -355,7 +355,7 @@ ${reportsContext}`;
       const geminiContents = formatGeminiContents(chatHistory, question);
 
       // Try multiple model aliases in order of preference
-      const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
+      const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
       let geminiResponse: any = null;
       let lastError: any = null;
 
@@ -488,7 +488,7 @@ Cover BOTH crops AND livestock where applicable (e.g., THI shade management, sil
 
     const aiClient = getAiClient();
     if (aiClient) {
-      const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
+      const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
       for (const mName of modelsToTry) {
         try {
           const response = await aiClient.models.generateContent({
@@ -550,7 +550,7 @@ Simulation Variables:
 
     const aiClient = getAiClient();
     if (aiClient) {
-      const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
+      const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
       for (const mName of modelsToTry) {
         try {
           const response = await aiClient.models.generateContent({

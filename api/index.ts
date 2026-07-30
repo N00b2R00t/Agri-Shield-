@@ -20,6 +20,11 @@ function getAiClient() {
   if (!apiKey || !apiKey.trim()) return null;
   return new GoogleGenAI({
     apiKey: apiKey.trim(),
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      },
+    },
   });
 }
 
@@ -143,7 +148,7 @@ ${weatherContext}`;
 
   const aiClient = getAiClient();
   if (aiClient) {
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
+    const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
     for (const mName of modelsToTry) {
       try {
         const response = await aiClient.models.generateContent({

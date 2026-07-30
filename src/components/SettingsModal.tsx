@@ -351,10 +351,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-stone-400 mb-1 font-semibold">Assigned System Role</label>
-                      <div className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-emerald-400 font-bold uppercase tracking-wider text-[11px] flex items-center justify-between">
-                        <span>{user.role.replace('_', ' ')}</span>
-                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                      <label className="block text-stone-400 mb-1 font-semibold flex items-center justify-between">
+                        <span>Assigned System Role</span>
+                        <span className="text-[10px] text-stone-500 font-mono">Synced with Database</span>
+                      </label>
+                      <div className="w-full bg-stone-900 border border-stone-800 rounded-xl p-3 flex items-center justify-between">
+                        <div>
+                          <div className="text-emerald-400 font-extrabold uppercase tracking-wider text-xs flex items-center space-x-1.5">
+                            <span>{user.role === 'admin' ? 'Administrator / System Director' : user.role === 'extension_officer' ? 'Agricultural Extension Officer' : user.role === 'ngo' ? 'NGO / Climate Specialist' : 'Smallholder Farmer'}</span>
+                          </div>
+                          <p className="text-[10px] text-stone-400 mt-0.5">
+                            {user.role === 'admin'
+                              ? 'Full System Authority: Access to analytics, broadcast dispatcher, and user management.'
+                              : user.role === 'extension_officer'
+                              ? 'Extension Command: Access to regional farm monitoring, advisory, and broadcast alerts.'
+                              : user.role === 'ngo'
+                              ? 'Climate Analytics: Access to GIS maps, vulnerability metrics, and simulators.'
+                              : 'Farmer View: Localized risk recommendations, community alerts, and farm tools.'}
+                          </p>
+                        </div>
+                        <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 ml-2" />
                       </div>
                     </div>
                   </div>

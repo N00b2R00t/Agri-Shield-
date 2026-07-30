@@ -201,11 +201,53 @@ export default function App() {
       if (dbPreds && dbPreds.length > 0) setPredictions(dbPreds);
       if (dbMarkets && dbMarkets.length > 0) setMarkets(dbMarkets);
       if (dbNotifs && dbNotifs.length > 0) setNotifications(dbNotifs);
-      if (dbUsers && dbUsers.length > 0) setUsersList(dbUsers);
+      if (dbUsers && dbUsers.length > 0) {
+        setUsersList(dbUsers);
+        // Sync active user session role with database profile
+        const activeEmail = user.email ? user.email.toLowerCase() : '';
+        const dbUser = dbUsers.find((u) => u.email.toLowerCase() === activeEmail || u.id === user.id);
+        if (dbUser) {
+          if (dbUser.role !== user.role || dbUser.name !== user.name || dbUser.county !== user.county) {
+            setUser(dbUser);
+            localStorage.setItem('agrishield_session_user', JSON.stringify(dbUser));
+            if (dbUser.role === 'admin' || dbUser.role === 'extension_officer') {
+              setActiveTab('admin');
+            }
+          }
+        }
+      }
     }
 
     loadSupabaseData();
   }, []);
+
+  // Live sync user profile & role updates from Database (every 10s or when window gains focus)
+  useEffect(() => {
+    async function syncUserProfileFromDb() {
+      if (!user || !user.email) return;
+      const dbUsers = await getProfilesFromDb();
+      if (dbUsers && dbUsers.length > 0) {
+        setUsersList(dbUsers);
+        const activeEmail = user.email.toLowerCase();
+        const dbUser = dbUsers.find((u) => u.email.toLowerCase() === activeEmail || u.id === user.id);
+        if (dbUser && (dbUser.role !== user.role || dbUser.name !== user.name || dbUser.county !== user.county)) {
+          setUser(dbUser);
+          localStorage.setItem('agrishield_session_user', JSON.stringify(dbUser));
+          if (dbUser.role === 'admin' || dbUser.role === 'extension_officer') {
+            setActiveTab('admin');
+          }
+        }
+      }
+    }
+
+    window.addEventListener('focus', syncUserProfileFromDb);
+    const interval = setInterval(syncUserProfileFromDb, 10000);
+
+    return () => {
+      window.removeEventListener('focus', syncUserProfileFromDb);
+      clearInterval(interval);
+    };
+  }, [user.email, user.role, user.id]);
 
   // Load weather when active farm changes
   useEffect(() => {
@@ -258,7 +300,7 @@ export default function App() {
     let updatedUser: UserProfile | undefined;
     setUsersList((prev) =>
       prev.map((u) => {
-        if (u.id === id) {
+        if (u.id === id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase())) {
           updatedUser = { ...u, role: newRole };
           return updatedUser;
         }
@@ -268,8 +310,16 @@ export default function App() {
 
     if (updatedUser) {
       await saveProfileToDb(updatedUser);
-      if (id === user.id) {
+      if (id === user.id || (updatedUser.email && user.email && updatedUser.email.toLowerCase() === user.email.toLowerCase())) {
         setUser(updatedUser);
+        localStorage.setItem('agrishield_session_user', JSON.stringify(updatedUser));
+        if (newRole === 'admin' || newRole === 'extension_officer') {
+          setActiveTab('admin');
+        } else if (newRole === 'ngo') {
+          setActiveTab('map');
+        } else {
+          setActiveTab('dashboard');
+        }
       }
     }
   };
@@ -323,7 +373,12 @@ export default function App() {
   };
 
   const handleChangeRole = (newRole: UserRole) => {
-    setUser({ ...user, role: newRole });
+    const updatedUser = { ...user, role: newRole };
+    setUser(updatedUser);
+    localStorage.setItem('agrishield_session_user', JSON.stringify(updatedUser));
+    setUsersList((prev) => prev.map((u) => (u.id === user.id || u.email === user.email ? updatedUser : u)));
+    saveProfileToDb(updatedUser);
+
     if (newRole === 'admin' || newRole === 'extension_officer') {
       setActiveTab('admin');
     } else if (newRole === 'ngo') {

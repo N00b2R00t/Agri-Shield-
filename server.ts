@@ -13,15 +13,19 @@ import {
 } from './src/data/mockData';
 import { CommunityReport, Farm, Recommendation } from './src/types';
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
+// Helper to create Gemini Client safely when API key is available
+function getAiClient() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || !apiKey.trim()) return null;
+  return new GoogleGenAI({
+    apiKey: apiKey.trim(),
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      },
     },
-  },
-});
+  });
+}
 
 // In-memory data store for stateful operations
 let farmsStore: Farm[] = [...INITIAL_FARMS];
@@ -301,14 +305,15 @@ ${reportsContext}`;
       const geminiContents = formatGeminiContents(chatHistory, question);
 
       // Try multiple model aliases in order of preference
-      const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+      const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
       let geminiResponse: any = null;
       let lastError: any = null;
 
-      if (process.env.GEMINI_API_KEY) {
+      const aiClient = getAiClient();
+      if (aiClient) {
         for (const mName of modelsToTry) {
           try {
-            geminiResponse = await ai.models.generateContent({
+            geminiResponse = await aiClient.models.generateContent({
               model: mName,
               contents: geminiContents,
               config: {
@@ -415,11 +420,12 @@ Cover BOTH crops AND livestock where applicable (e.g., THI shade management, sil
 
     const promptText = `Farm: ${JSON.stringify(farm || {})}\nWeather: ${JSON.stringify(weather || {})}\nReports: ${JSON.stringify(nearbyReports || [])}`;
 
-    if (process.env.GEMINI_API_KEY) {
-      const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+    const aiClient = getAiClient();
+    if (aiClient) {
+      const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
       for (const mName of modelsToTry) {
         try {
-          const response = await ai.models.generateContent({
+          const response = await aiClient.models.generateContent({
             model: mName,
             contents: promptText,
             config: {
@@ -476,11 +482,12 @@ Simulation Variables:
 
     const systemInstruction = `You are AgriShield AI's What-If Agricultural Risk Simulator. Estimate agricultural outcomes under hypothetical management shifts and climate scenarios. Return a valid JSON object matching the requested schema.`;
 
-    if (process.env.GEMINI_API_KEY) {
-      const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+    const aiClient = getAiClient();
+    if (aiClient) {
+      const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
       for (const mName of modelsToTry) {
         try {
-          const response = await ai.models.generateContent({
+          const response = await aiClient.models.generateContent({
             model: mName,
             contents: promptText,
             config: {

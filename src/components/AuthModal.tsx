@@ -19,7 +19,7 @@ import { AgriShieldLogoFull } from './AgriShieldLogo';
 import { UserProfile, UserRole } from '../types';
 import { KENYA_COUNTIES } from '../data/kenyaCounties';
 import { supabase } from '../lib/supabase';
-import { saveProfileToDb } from '../lib/dbService';
+import { saveProfileToDb, getProfilesFromDb } from '../lib/dbService';
 import {
   hashPassword,
   sanitizeInput,
@@ -111,32 +111,44 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       loginRateLimiter.recordSuccess(emailClean);
+
+      // Check database profiles table for manually assigned or updated role
+      const dbProfiles = await getProfilesFromDb();
+      const dbProfile = dbProfiles.find((p) => p.email.toLowerCase() === emailClean.toLowerCase());
+
+      const activeRole: UserRole = dbProfile
+        ? dbProfile.role
+        : ((data.user.user_metadata?.role as UserRole) || 'farmer');
+
       const userProfile: UserProfile = {
-        id: data.user.id,
-        name: sanitizeInput(data.user.user_metadata?.full_name || emailClean.split('@')[0]),
+        id: dbProfile?.id || data.user.id,
+        name: dbProfile?.name || sanitizeInput(data.user.user_metadata?.full_name || emailClean.split('@')[0]),
         email: emailClean,
-        phone: data.user.user_metadata?.phone || '0143791311',
-        role: (data.user.user_metadata?.role as UserRole) || 'farmer',
+        phone: dbProfile?.phone || data.user.user_metadata?.phone || '0143791311',
+        role: activeRole,
         country: 'Kenya',
-        county: data.user.user_metadata?.county || 'Uasin Gishu',
-        organization: sanitizeInput(data.user.user_metadata?.organization || ''),
+        county: dbProfile?.county || data.user.user_metadata?.county || 'Uasin Gishu',
+        organization: dbProfile?.organization || sanitizeInput(data.user.user_metadata?.organization || ''),
       };
 
       await saveProfileToDb(userProfile);
       onLoginSuccess(userProfile);
       onClose();
     } catch {
-      // Direct session fallback for registered email
+      // Direct session fallback for registered email - fetch role from DB
       loginRateLimiter.recordSuccess(emailClean);
+      const dbProfiles = await getProfilesFromDb();
+      const dbProfile = dbProfiles.find((p) => p.email.toLowerCase() === emailClean.toLowerCase());
+
       const fallbackUser: UserProfile = {
-        id: `usr-${Date.now()}`,
-        name: emailClean.split('@')[0],
+        id: dbProfile?.id || `usr-${Date.now()}`,
+        name: dbProfile?.name || emailClean.split('@')[0],
         email: emailClean,
-        phone: '0143791311',
-        role: 'farmer',
+        phone: dbProfile?.phone || '0143791311',
+        role: dbProfile ? dbProfile.role : 'farmer',
         country: 'Kenya',
-        county: 'Uasin Gishu',
-        organization: 'Smallholder Farmer',
+        county: dbProfile?.county || 'Uasin Gishu',
+        organization: dbProfile?.organization || 'Smallholder Farmer',
       };
       onLoginSuccess(fallbackUser);
       onClose();

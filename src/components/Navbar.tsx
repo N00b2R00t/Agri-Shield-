@@ -114,99 +114,119 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Center: Desktop Farm Switcher */}
+          {/* Center Header: Role-Specific View (Farmer/Admin get Farm Switcher; Officers/NGO get Regional Scope Pill) */}
           <div className="hidden md:block relative">
-            <button
-              onClick={() => {
-                setShowFarmDropdown(!showFarmDropdown);
-                setShowRoleDropdown(false);
-                setShowNotifications(false);
-              }}
-              className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-750 border border-stone-700 text-stone-200 text-xs font-medium transition-colors"
-            >
-              <Sprout className="w-4 h-4 text-emerald-400 shrink-0" />
-              <div className="text-left max-w-[150px] lg:max-w-[210px] truncate">
-                <div className="truncate font-bold text-stone-100">
-                  {activeFarm ? activeFarm.name : 'No Farm Registered'}
-                </div>
-                <div className="text-[10px] text-stone-400 truncate">
-                  {activeFarm ? `${activeFarm.cropType} • ${activeFarm.county} County` : 'Click to register farm'}
-                </div>
-              </div>
-              <ChevronDown className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-            </button>
+            {user.role === 'farmer' || user.role === 'admin' ? (
+              <>
+                <button
+                  onClick={() => {
+                    setShowFarmDropdown(!showFarmDropdown);
+                    setShowRoleDropdown(false);
+                    setShowNotifications(false);
+                  }}
+                  className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-750 border border-stone-700 text-stone-200 text-xs font-medium transition-colors"
+                >
+                  <Sprout className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <div className="text-left max-w-[150px] lg:max-w-[210px] truncate">
+                    <div className="truncate font-bold text-stone-100">
+                      {activeFarm ? activeFarm.name : 'No Farm Registered'}
+                    </div>
+                    <div className="text-[10px] text-stone-400 truncate">
+                      {activeFarm ? `${activeFarm.cropType} • ${activeFarm.county} County` : 'Click to register farm'}
+                    </div>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                </button>
 
-            {showFarmDropdown && (
-              <div className="absolute left-0 mt-2 w-72 bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl py-2 z-50">
-                <div className="px-3.5 py-1.5 text-[11px] font-bold text-stone-400 uppercase tracking-wider flex items-center justify-between">
-                  <span>Registered Farms</span>
-                  <span className="text-[10px] text-emerald-400 font-mono">{farms.length} Active</span>
-                </div>
-                {farms.map((f) => (
-                  <div
-                    key={f.id}
-                    className={`w-full px-3.5 py-2 flex items-center justify-between hover:bg-stone-800 transition-colors ${
-                      activeFarm && f.id === activeFarm.id ? 'bg-emerald-950/60 border-l-3 border-emerald-400' : ''
-                    }`}
-                  >
-                    <button
-                      onClick={() => {
-                        onSelectFarm(f);
-                        setShowFarmDropdown(false);
-                      }}
-                      className="text-left flex-1 truncate pr-2"
-                    >
-                      <div className="text-xs font-bold text-stone-200 truncate">{f.name}</div>
-                      <div className="text-[11px] text-stone-400 truncate">
-                        {f.cropType} • {f.county} ({f.areaHectares} ha)
-                      </div>
-                    </button>
-                    <div className="flex items-center space-x-1 shrink-0">
-                      {activeFarm && f.id === activeFarm.id && (
-                        <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-black">
-                          Active
-                        </span>
-                      )}
-                      {onDeleteFarm && (
+                {showFarmDropdown && (
+                  <div className="absolute left-0 mt-2 w-72 bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl py-2 z-50">
+                    <div className="px-3.5 py-1.5 text-[11px] font-bold text-stone-400 uppercase tracking-wider flex items-center justify-between">
+                      <span>Registered Farms</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">{farms.length} Active</span>
+                    </div>
+                    {farms.map((f) => (
+                      <div
+                        key={f.id}
+                        className={`w-full px-3.5 py-2 flex items-center justify-between hover:bg-stone-800 transition-colors ${
+                          activeFarm && f.id === activeFarm.id ? 'bg-emerald-950/60 border-l-3 border-emerald-400' : ''
+                        }`}
+                      >
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteFarm(f.id);
+                          onClick={() => {
+                            onSelectFarm(f);
+                            setShowFarmDropdown(false);
                           }}
-                          className="p-1 text-stone-400 hover:text-red-400 rounded transition-colors"
-                          title="Delete farm record"
+                          className="text-left flex-1 truncate pr-2"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <div className="text-xs font-bold text-stone-200 truncate">{f.name}</div>
+                          <div className="text-[11px] text-stone-400 truncate">
+                            {f.cropType} • {f.county} ({f.areaHectares} ha)
+                          </div>
+                        </button>
+                        <div className="flex items-center space-x-1 shrink-0">
+                          {activeFarm && f.id === activeFarm.id && (
+                            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-black">
+                              Active
+                            </span>
+                          )}
+                          {onDeleteFarm && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteFarm(f.id);
+                              }}
+                              className="p-1 text-stone-400 hover:text-red-400 rounded transition-colors"
+                              title="Delete farm record"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="border-t border-stone-800 mt-1 pt-1.5 px-2.5 space-y-1">
+                      <button
+                        onClick={() => {
+                          setShowFarmDropdown(false);
+                          onOpenNewFarmModal();
+                        }}
+                        className="w-full text-left px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:bg-emerald-950/50 flex items-center space-x-2 transition-colors"
+                      >
+                        <Plus className="w-4 h-4 text-emerald-400" />
+                        <span>Register New Farm Location</span>
+                      </button>
+
+                      {onOpenLivestockModal && (
+                        <button
+                          onClick={() => {
+                            setShowFarmDropdown(false);
+                            onOpenLivestockModal();
+                          }}
+                          className="w-full text-left px-2.5 py-2 rounded-xl text-xs font-bold text-amber-400 hover:bg-amber-950/50 flex items-center space-x-2 transition-colors"
+                        >
+                          <Plus className="w-4 h-4 text-amber-400" />
+                          <span>Manage Livestock Herd</span>
                         </button>
                       )}
                     </div>
                   </div>
-                ))}
-
-                <div className="border-t border-stone-800 mt-1 pt-1.5 px-2.5 space-y-1">
-                  <button
-                    onClick={() => {
-                      setShowFarmDropdown(false);
-                      onOpenNewFarmModal();
-                    }}
-                    className="w-full text-left px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:bg-emerald-950/50 flex items-center space-x-2 transition-colors"
-                  >
-                    <Plus className="w-4 h-4 text-emerald-400" />
-                    <span>Register New Farm Location</span>
-                  </button>
-
-                  {onOpenLivestockModal && (
-                    <button
-                      onClick={() => {
-                        setShowFarmDropdown(false);
-                        onOpenLivestockModal();
-                      }}
-                      className="w-full text-left px-2.5 py-2 rounded-xl text-xs font-bold text-amber-400 hover:bg-amber-950/50 flex items-center space-x-2 transition-colors"
-                    >
-                      <Plus className="w-4 h-4 text-amber-400" />
-                      <span>Manage Livestock Herd</span>
-                    </button>
-                  )}
+                )}
+              </>
+            ) : user.role === 'extension_officer' ? (
+              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-blue-950/70 border border-blue-800/80 text-blue-200 text-xs">
+                <Building2 className="w-4 h-4 text-blue-400 shrink-0" />
+                <div className="text-left">
+                  <div className="font-bold text-blue-100">Extension Command Scope</div>
+                  <div className="text-[10px] text-blue-300">{farms.length} Monitored County Farms</div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-amber-950/70 border border-amber-800/80 text-amber-200 text-xs">
+                <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+                <div className="text-left">
+                  <div className="font-bold text-amber-100">Climate Resilience Scope</div>
+                  <div className="text-[10px] text-amber-300">Monitored County Risk Matrix</div>
                 </div>
               </div>
             )}
@@ -488,71 +508,82 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            {/* Active Farm Switcher Section */}
-            <div className="bg-stone-850 border border-stone-800 rounded-2xl p-3.5 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-stone-300 flex items-center space-x-1.5">
-                  <Sprout className="w-4 h-4 text-emerald-400" />
-                  <span>Active Farm Parcel</span>
+            {/* Active Farm Switcher Section (Only for Farmers & Admin) */}
+            {(user.role === 'farmer' || user.role === 'admin') ? (
+              <div className="bg-stone-850 border border-stone-800 rounded-2xl p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-stone-300 flex items-center space-x-1.5">
+                    <Sprout className="w-4 h-4 text-emerald-400" />
+                    <span>Active Farm Parcel</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-mono">{farms.length} Registered</span>
                 </div>
-                <span className="text-[10px] text-emerald-400 font-mono">{farms.length} Registered</span>
-              </div>
 
-              <div className="space-y-1.5">
-                {farms.map((f) => (
-                  <button
-                    key={f.id}
-                    onClick={() => {
-                      onSelectFarm(f);
-                      setShowMobileMenu(false);
-                    }}
-                    className={`w-full text-left p-2.5 rounded-xl border text-xs flex items-center justify-between ${
-                      activeFarm && f.id === activeFarm.id
-                        ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 font-bold'
-                        : 'bg-stone-900 border-stone-800 text-stone-300'
-                    }`}
-                  >
-                    <div className="truncate pr-2">
-                      <div className="truncate font-semibold">{f.name}</div>
-                      <div className="text-[10px] text-stone-400 truncate">
-                        {f.cropType} • {f.county} ({f.areaHectares} ha)
+                <div className="space-y-1.5">
+                  {farms.map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => {
+                        onSelectFarm(f);
+                        setShowMobileMenu(false);
+                      }}
+                      className={`w-full text-left p-2.5 rounded-xl border text-xs flex items-center justify-between ${
+                        activeFarm && f.id === activeFarm.id
+                          ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 font-bold'
+                          : 'bg-stone-900 border-stone-800 text-stone-300'
+                      }`}
+                    >
+                      <div className="truncate pr-2">
+                        <div className="truncate font-semibold">{f.name}</div>
+                        <div className="text-[10px] text-stone-400 truncate">
+                          {f.cropType} • {f.county} ({f.areaHectares} ha)
+                        </div>
                       </div>
-                    </div>
-                    {activeFarm && f.id === activeFarm.id && (
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-black shrink-0">
-                        Active
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
+                      {activeFarm && f.id === activeFarm.id && (
+                        <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-black shrink-0">
+                          Active
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
 
-              <div className="pt-2 border-t border-stone-750 flex gap-2">
-                <button
-                  onClick={() => {
-                    setShowMobileMenu(false);
-                    onOpenNewFarmModal();
-                  }}
-                  className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold text-xs flex items-center justify-center space-x-1"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Farm</span>
-                </button>
-
-                {onOpenLivestockModal && (
+                <div className="pt-2 border-t border-stone-750 flex gap-2">
                   <button
                     onClick={() => {
                       setShowMobileMenu(false);
-                      onOpenLivestockModal();
+                      onOpenNewFarmModal();
                     }}
-                    className="flex-1 py-2 px-3 rounded-xl bg-stone-800 border border-stone-700 text-amber-400 font-bold text-xs flex items-center justify-center space-x-1"
+                    className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold text-xs flex items-center justify-center space-x-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Livestock</span>
+                    <span>Add Farm</span>
                   </button>
-                )}
+
+                  {onOpenLivestockModal && (
+                    <button
+                      onClick={() => {
+                        setShowMobileMenu(false);
+                        onOpenLivestockModal();
+                      }}
+                      className="flex-1 py-2 px-3 rounded-xl bg-stone-800 border border-stone-700 text-amber-400 font-bold text-xs flex items-center justify-center space-x-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Livestock</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-stone-850 border border-stone-800 rounded-2xl p-3.5 space-y-2">
+                <div className="text-[10px] font-bold uppercase text-stone-400">Regional Monitoring Scope</div>
+                <div className="text-xs text-stone-200 font-semibold">
+                  {user.role === 'extension_officer'
+                    ? `Monitored County: Uasin Gishu & Nakuru (${farms.length} Farms)`
+                    : 'Rift Valley Regional Climate Risk Matrix'}
+                </div>
+              </div>
+            )}
 
             {/* Role Perspective Selector (Admin Only) */}
             {user.role === 'admin' && (

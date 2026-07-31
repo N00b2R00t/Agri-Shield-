@@ -120,6 +120,69 @@ export const AgriShieldLogoIcon: React.FC<{ className?: string; size?: number }>
   );
 };
 
+export const EldoHubLogo: React.FC<{ size?: number; className?: string; showText?: boolean }> = ({
+  size = 32,
+  className = '',
+  showText = true,
+}) => {
+  return (
+    <div className={`flex items-center space-x-2.5 ${className}`}>
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-label="EldoHub Logo"
+        className="shrink-0 transition-transform hover:scale-105"
+      >
+        <defs>
+          <linearGradient id="eldoOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#F97316" />
+            <stop offset="100%" stopColor="#EA580C" />
+          </linearGradient>
+          <linearGradient id="eldoBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0EA5E9" />
+            <stop offset="100%" stopColor="#0284C7" />
+          </linearGradient>
+        </defs>
+        {/* Hexagonal Tech Hub Frame */}
+        <polygon points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5" fill="url(#eldoBlue)" opacity="0.15" stroke="url(#eldoBlue)" strokeWidth="3" />
+        <polygon points="50,15 80,32.5 80,67.5 50,85 20,67.5 20,32.5" fill="#030712" stroke="url(#eldoOrange)" strokeWidth="2.5" />
+        
+        {/* Central Interconnected Innovation Nodes ("Hub") */}
+        <circle cx="50" cy="50" r="10" fill="url(#eldoOrange)" />
+        <circle cx="35" cy="35" r="6" fill="url(#eldoBlue)" />
+        <circle cx="65" cy="35" r="6" fill="url(#eldoBlue)" />
+        <circle cx="35" cy="65" r="6" fill="url(#eldoBlue)" />
+        <circle cx="65" cy="65" r="6" fill="url(#eldoBlue)" />
+
+        {/* Neural Circuit Connectors */}
+        <line x1="50" y1="50" x2="35" y2="35" stroke="#38BDF8" strokeWidth="2.5" />
+        <line x1="50" y1="50" x2="65" y2="35" stroke="#38BDF8" strokeWidth="2.5" />
+        <line x1="50" y1="50" x2="35" y2="65" stroke="#F97316" strokeWidth="2.5" />
+        <line x1="50" y1="50" x2="65" y2="65" stroke="#F97316" strokeWidth="2.5" />
+
+        {/* Outer Tech Signal Nodes */}
+        <circle cx="50" cy="22" r="3" fill="#FB923C" />
+        <circle cx="78" cy="50" r="3" fill="#38BDF8" />
+        <circle cx="50" cy="78" r="3" fill="#38BDF8" />
+        <circle cx="22" cy="50" r="3" fill="#FB923C" />
+      </svg>
+      {showText && (
+        <div className="flex flex-col">
+          <span className="text-base font-black tracking-tight text-white leading-none">
+            Eldo<span className="text-orange-500">Hub</span>
+          </span>
+          <span className="text-[9px] font-bold tracking-widest text-orange-400 uppercase leading-tight mt-0.5">
+            Innovation & Technology
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const AgriShieldLogoFull: React.FC<LogoProps> = ({
   className = '',
   size = 40,

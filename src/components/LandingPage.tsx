@@ -20,7 +20,7 @@ import {
   UserPlus,
   LogIn,
 } from 'lucide-react';
-import { AgriShieldLogoFull } from './AgriShieldLogo';
+import { AgriShieldLogoFull, EldoHubLogo } from './AgriShieldLogo';
 import { KENYA_COUNTIES } from '../data/kenyaCounties';
 
 import agriHeroBg from '../assets/images/agri_hero_bg_1785353980275.jpg';
@@ -284,33 +284,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </button>
         </div>
 
-        {/* EldoHub Hackathon Sponsorship Banner */}
-        <div className="mt-8 w-full max-w-3xl p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-950/80 via-stone-900 to-emerald-950/80 border border-amber-500/40 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
-          <div className="flex items-center space-x-3.5">
-            <div className="p-3 rounded-2xl bg-amber-500/20 border border-amber-500/40 shrink-0">
-              <AgriShieldLogoFull size={28} variant="dark" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-500/30">
-                  Official Sponsor
-                </span>
-                <span className="text-xs font-bold text-stone-300">
-                  31st July 2026
-                </span>
-              </div>
-              <h3 className="text-sm sm:text-base font-black text-amber-200 mt-0.5">
-                EldoHub Innovation & Technology Hackathon 2026
-              </h3>
-              <p className="text-xs text-stone-300 leading-snug mt-0.5">
-                AgriShield is proud to present at EldoHub Hackathon 2026 — empowering smallholder farmers across Kenya through AI climate resilience and digital agronomy.
-              </p>
-            </div>
-          </div>
-          <div className="shrink-0 font-extrabold text-xs text-amber-300 bg-stone-950/80 px-3.5 py-2 rounded-xl border border-amber-500/30">
-            Jul 31, 2026
-          </div>
-        </div>
 
         {/* Quick Platform Metrics Banner */}
         <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full max-w-4xl text-left">

@@ -14,16 +14,22 @@ interface FarmerDashboardProps {
 
 export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
   user,
-  farms,
+  farms = [],
   weather,
-  recommendations,
-  notifications,
+  recommendations = [],
+  notifications = [],
   onNavigate,
   onOpenNewFarm,
 }) => {
-  const activeFarm = farms[0] || null;
-  const highPriorityRecs = recommendations.filter((r) => r.priority === 'high');
-  const unreadAlerts = notifications.filter((n) => !n.read);
+  const farmList = farms || [];
+  const activeFarm = farmList[0] || null;
+  const highPriorityRecs = (recommendations || []).filter((r) => r?.priority === 'high');
+  const unreadAlerts = (notifications || []).filter((n) => !n?.read);
+
+  const currentTemp = weather?.currentTemp ?? 24;
+  const rainfallMm = weather?.rainfallMm ?? 0;
+  const rainfallProb = weather?.rainfallProb ?? 10;
+  const livestockThi = weather?.livestockThi ?? 72;
 
   return (
     <div className="space-y-6">
@@ -77,9 +83,9 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
             <span>Local Micro-Climate</span>
             <CloudRain className="w-4 h-4 text-cyan-400" />
           </div>
-          <div className="text-2xl font-black text-cyan-300">{weather.currentTemp}°C / {weather.rainfallMm}mm</div>
+          <div className="text-2xl font-black text-cyan-300">{currentTemp}°C / {rainfallMm}mm</div>
           <p className="text-[11px] text-stone-400">
-            Rain chance today: <span className="text-emerald-400 font-bold">{weather.rainfallProb}%</span>
+            Rain chance today: <span className="text-emerald-400 font-bold">{rainfallProb}%</span>
           </p>
         </div>
 
@@ -92,7 +98,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
             {activeFarm ? `${activeFarm.cropHealthScore}% Health` : '92% Average'}
           </div>
           <p className="text-[11px] text-stone-400">
-            THI Stress Index: <span className="text-amber-400 font-bold">{weather.livestockThi || 72}</span>
+            THI Stress Index: <span className="text-amber-400 font-bold">{livestockThi}</span>
           </p>
         </div>
 

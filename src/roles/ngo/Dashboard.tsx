@@ -12,11 +12,13 @@ interface NGODashboardProps {
 
 export const NGODashboard: React.FC<NGODashboardProps> = ({
   user,
-  farms,
+  farms = [],
   weather,
-  reports,
+  reports = [],
   onNavigate,
 }) => {
+  const droughtProb = weather?.droughtProbability ?? 28;
+  const floodProb = weather?.floodProbability ?? 18;
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -50,7 +52,7 @@ export const NGODashboard: React.FC<NGODashboardProps> = ({
             <span>Drought Risk Index</span>
             <Activity className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-black text-amber-300">{weather.droughtProbability}%</div>
+          <div className="text-2xl font-black text-amber-300">{droughtProb}%</div>
           <p className="text-[11px] text-stone-400">Regional water stress probability</p>
         </div>
 
@@ -59,7 +61,7 @@ export const NGODashboard: React.FC<NGODashboardProps> = ({
             <span>Flood Risk Probability</span>
             <Activity className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-2xl font-black text-blue-300">{weather.floodProbability}%</div>
+          <div className="text-2xl font-black text-blue-300">{floodProb}%</div>
           <p className="text-[11px] text-stone-400">High catchment precipitation</p>
         </div>
 

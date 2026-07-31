@@ -14,15 +14,15 @@ interface ExtensionDashboardProps {
 
 export const ExtensionDashboard: React.FC<ExtensionDashboardProps> = ({
   user,
-  farms,
-  usersList,
+  farms = [],
+  usersList = [],
   weather,
-  reports,
-  predictions,
+  reports = [],
+  predictions = [],
   onNavigate,
 }) => {
-  const farmersCount = usersList.filter((u) => u.role === 'farmer').length;
-  const criticalPredictions = predictions.filter((p) => p.riskLevel === 'Critical' || p.riskLevel === 'High');
+  const farmersCount = (usersList || []).filter((u) => u?.role === 'farmer').length;
+  const criticalPredictions = (predictions || []).filter((p) => p?.riskLevel === 'Critical' || p?.riskLevel === 'High');
 
   return (
     <div className="space-y-6">

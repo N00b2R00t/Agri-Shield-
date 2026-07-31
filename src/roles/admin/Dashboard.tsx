@@ -13,12 +13,13 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   user,
-  usersList,
-  farms,
-  reports,
-  predictions,
+  usersList = [],
+  farms = [],
+  reports = [],
+  predictions = [],
   onNavigate,
 }) => {
+  const userCount = (usersList || []).length;
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -41,7 +42,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           className="px-4 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs flex items-center space-x-2 shadow-lg transition-all z-10"
         >
           <Users className="w-4 h-4" />
-          <span>Manage Users & Roles ({usersList.length})</span>
+          <span>Manage Users & Roles ({userCount})</span>
         </button>
       </div>
 
@@ -52,7 +53,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <span>Total Registered Accounts</span>
             <Users className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-white">{usersList.length} Accounts</div>
+          <div className="text-2xl font-black text-white">{userCount} Accounts</div>
           <p className="text-[11px] text-stone-400">Synced with Supabase DB</p>
         </div>
 

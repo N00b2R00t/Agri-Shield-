@@ -81,8 +81,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     });
 
     // 1. Draw Active Farm Polygon & Marker
-    if (showBoundaries) {
+    if (showBoundaries && farms && farms.length > 0) {
       farms.forEach((f) => {
+        if (!f) return;
         const isCurrent = activeFarm && f.id === activeFarm.id;
         if (f.boundaryCoordinates && f.boundaryCoordinates.length >= 3) {
           const poly = L.polygon(f.boundaryCoordinates as L.LatLngTuple[], {
@@ -102,20 +103,22 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         }
 
         // Custom Farm Marker
-        const farmIcon = L.divIcon({
-          className: 'custom-farm-icon',
-          html: `<div style="background-color: ${isCurrent ? '#059669' : '#4b5563'}; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">🌾</div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 14],
-        });
+        if (typeof f.lat === 'number' && typeof f.lng === 'number') {
+          const farmIcon = L.divIcon({
+            className: 'custom-farm-icon',
+            html: `<div style="background-color: ${isCurrent ? '#059669' : '#4b5563'}; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">🌾</div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+          });
 
-        const farmMarker = L.marker([f.lat, f.lng], { icon: farmIcon }).addTo(map);
-        farmMarker.bindPopup(`<b>${f.name}</b><br/>${f.locationName} (${f.county} County)`);
+          const farmMarker = L.marker([f.lat, f.lng], { icon: farmIcon }).addTo(map);
+          farmMarker.bindPopup(`<b>${f.name}</b><br/>${f.locationName} (${f.county} County)`);
+        }
       });
     }
 
     // 2. Draw County Focus Pin
-    if (activeCountyObj) {
+    if (activeCountyObj && typeof activeCountyObj.lat === 'number' && typeof activeCountyObj.lng === 'number') {
       const countyIcon = L.divIcon({
         className: 'custom-county-icon',
         html: `<div style="background-color: #2563eb; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">📍</div>`,
@@ -133,7 +136,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
 
     // 3. Draw Risk Overlay Circles
-    if (showRiskOverlays) {
+    if (showRiskOverlays && typeof initialLat === 'number' && typeof initialLng === 'number') {
       // Armyworm Spread Circle
       L.circle([initialLat + 0.02, initialLng + 0.02], {
         color: '#ef4444',
@@ -142,7 +145,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         radius: 3200,
       })
         .addTo(map)
-        .bindPopup('<b>Armyworm / Vector Outbreak Buffer</b><br/>Monitored in ' + activeCountyObj.name + ' Sector.');
+        .bindPopup('<b>Armyworm / Vector Outbreak Buffer</b><br/>Monitored in ' + (activeCountyObj?.name || 'Local') + ' Sector.');
 
       // Flood Risk Buffer
       L.circle([initialLat - 0.02, initialLng - 0.01], {
@@ -156,8 +159,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
 
     // 4. Draw Community Reports Pins
-    if (showReports) {
+    if (showReports && reports && reports.length > 0) {
       reports.forEach((rep) => {
+        if (!rep || typeof rep.lat !== 'number' || typeof rep.lng !== 'number') return;
         let color = '#eab308';
         if (rep.severity === 'critical') color = '#dc2626';
         else if (rep.severity === 'high') color = '#f97316';
@@ -190,7 +194,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
 
     // 5. Draw Markets
-    if (showMarkets) {
+    if (showMarkets && markets && markets.length > 0) {
       markets.forEach((mkt) => {
         const mktIcon = L.divIcon({
           className: 'custom-mkt-icon',

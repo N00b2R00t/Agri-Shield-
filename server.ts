@@ -468,13 +468,14 @@ ${reportsContext}`;
       queryLower.includes('extension officer') ||
       queryLower.includes('ngo') ||
       queryLower.includes('switch role') ||
+      queryLower.includes('change role') ||
       queryLower.includes('admin')
     ) {
-      replyText = `### 👥 Multi-Role Support in AgriShield\n\nAgriShield offers 4 customized role perspectives:\n\n1. **Smallholder Farmer**: Farm plot management, AI agronomy, fertilizer schedules, and market prices.\n2. **Extension Officer**: Regional farmer directory, field dispatch, pest outbreak verification, and farm visit logs.\n3. **NGO / Climate Specialist**: Regional GIS climate vulnerability analytics, drought indicator mapping, and community support tools.\n4. **Gov / System Admin**: User account management, database synchronization, system broadcast alerts, and market price updates.\n\n*To Switch Roles*: Click your active role badge in the top right header bar or visit **Settings** -> **User Profile**.`;
+      replyText = `### 🔒 AgriShield User Roles & Access Policy\n\nAgriShield offers 4 specialized role perspectives:\n\n1. **Smallholder Farmer**: Farm plot management, AI agronomy advice, fertilizer schedules, and market prices.\n2. **Extension Officer**: Regional farmer directory, field dispatch, pest outbreak verification, and farm visit logs.\n3. **NGO / Climate Specialist**: Regional GIS climate vulnerability analytics, drought indicator mapping, and community support tools.\n4. **Gov / System Admin**: User account management, database synchronization, system broadcast alerts, and market price updates.\n\n⚠️ **Role Change Policy**:\n- **Non-Admin Users**: Standard users cannot change their role directly.\n- **How to Request a Role Change**: To request a role upgrade or change, please contact System Admin (**Ian Kipkoech Chirchir**) directly via **WhatsApp Support (+254 143 791 311)** or through the in-app **Support** tab.\n- **System Admins**: Only authorized Admins can modify account role permissions.`;
       fallbackQuickActions = [
-        `What does AgriShield do?`,
+        `How to contact WhatsApp Support for role change?`,
         `How to register a new farm?`,
-        `How does the What-If simulator work?`,
+        `What does AgriShield do?`,
       ];
     } else if (isGreeting) {
       replyText = `Jambo / Habari yako! I am your AgriShield AI Agronomist. I'm actively monitoring your farm in ${farm?.locationName || 'Kenya'} (${crop}, ${livestock}).\n\nToday's micro-climate summary: **${temp}°C**, **${rain}mm expected rain**, and soil moisture at **${moisture}%**.\n\nHow can I help you optimize your crop yields, protect your livestock, or assist with AgriShield features today?`;

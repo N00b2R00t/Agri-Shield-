@@ -70,7 +70,7 @@ export const CommunityIntel: React.FC<CommunityIntelProps> = ({
             <p className="text-xs text-stone-300 leading-relaxed">{rep.description}</p>
 
             <div className="flex items-center justify-between text-xs pt-1">
-              <span className="text-[11px] text-stone-500 font-mono">Logged: {rep.createdAt.split('T')[0]}</span>
+              <span className="text-[11px] text-stone-500 font-mono">Logged: {(rep.createdAt || new Date().toISOString()).split('T')[0]}</span>
               {onUpvoteReport && (
                 <button
                   onClick={() => onUpvoteReport(rep.id)}

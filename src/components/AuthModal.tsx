@@ -126,7 +126,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       const userProfile: UserProfile = {
         id: dbProfile?.id || data.user.id,
-        name: dbProfile?.name || sanitizeInput(data.user.user_metadata?.full_name || emailClean.split('@')[0]),
+        name: dbProfile?.name || sanitizeInput(data.user.user_metadata?.full_name || (emailClean || '').split('@')[0]),
         email: emailClean,
         phone: dbProfile?.phone || data.user.user_metadata?.phone || '0143791311',
         role: activeRole,
@@ -146,7 +146,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       const fallbackUser: UserProfile = {
         id: dbProfile?.id || `usr-${Date.now()}`,
-        name: dbProfile?.name || emailClean.split('@')[0],
+        name: dbProfile?.name || (emailClean || '').split('@')[0],
         email: emailClean,
         phone: dbProfile?.phone || '0143791311',
         role: dbProfile ? dbProfile.role : 'farmer',

@@ -204,9 +204,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <header className="sticky top-0 z-40 bg-stone-900/90 backdrop-blur-md border-b border-stone-800/80 px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <AgriShieldLogoFull className="h-9 w-auto" />
-          <span className="hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            Kenya 47 Counties Climate Network
-          </span>
+          <div className="hidden md:flex items-center space-x-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Kenya 47 Counties Climate Network
+            </span>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              Sponsored by EldoHub Hackathon • 31st July 2026
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-3">
@@ -277,6 +282,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <Lock className="w-4 h-4 text-emerald-400" />
             <span>Sign In to Account</span>
           </button>
+        </div>
+
+        {/* EldoHub Hackathon Sponsorship Banner */}
+        <div className="mt-8 w-full max-w-3xl p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-950/80 via-stone-900 to-emerald-950/80 border border-amber-500/40 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
+          <div className="flex items-center space-x-3.5">
+            <div className="p-3 rounded-2xl bg-amber-500/20 border border-amber-500/40 shrink-0">
+              <AgriShieldLogoFull size={28} variant="dark" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-500/30">
+                  Official Sponsor
+                </span>
+                <span className="text-xs font-bold text-stone-300">
+                  31st July 2026
+                </span>
+              </div>
+              <h3 className="text-sm sm:text-base font-black text-amber-200 mt-0.5">
+                EldoHub Innovation & Technology Hackathon 2026
+              </h3>
+              <p className="text-xs text-stone-300 leading-snug mt-0.5">
+                AgriShield is proud to present at EldoHub Hackathon 2026 — empowering smallholder farmers across Kenya through AI climate resilience and digital agronomy.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 font-extrabold text-xs text-amber-300 bg-stone-950/80 px-3.5 py-2 rounded-xl border border-amber-500/30">
+            Jul 31, 2026
+          </div>
         </div>
 
         {/* Quick Platform Metrics Banner */}

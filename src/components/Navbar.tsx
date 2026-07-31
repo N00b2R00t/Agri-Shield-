@@ -87,7 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     farmer: { label: 'Smallholder Farmer', bg: 'bg-emerald-100 text-emerald-800 border-emerald-300', text: 'text-emerald-700' },
     extension_officer: { label: 'Extension Officer', bg: 'bg-blue-100 text-blue-800 border-blue-300', text: 'text-blue-700' },
     ngo: { label: 'NGO / Climate Specialist', bg: 'bg-purple-100 text-purple-800 border-purple-300', text: 'text-purple-700' },
-    admin: { label: 'Gov / System Admin', bg: 'bg-amber-100 text-amber-800 border-amber-300', text: 'text-amber-700' },
+    admin: { label: 'System Admin', bg: 'bg-amber-100 text-amber-800 border-amber-300', text: 'text-amber-700' },
   };
 
   const handleTabClick = (tabId: string) => {
@@ -333,7 +333,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 title="Account Settings & Profile"
               >
                 <User className="w-4 h-4 text-emerald-400" />
-                <span className="hidden lg:inline max-w-[90px] truncate">{user.name.split(' ')[0]}</span>
+                <span className="hidden lg:inline max-w-[90px] truncate">{(user?.name || 'User').split(' ')[0]}</span>
               </button>
 
               <button

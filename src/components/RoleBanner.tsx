@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserRole } from '../types';
-import { User, Eye, ShieldCheck, Globe, Building2 } from 'lucide-react';
+import { User, Eye, ShieldCheck, Globe, Building2, Lock, MessageSquare } from 'lucide-react';
 
 interface RoleBannerProps {
   role: UserRole;
@@ -34,7 +34,7 @@ export const RoleBanner: React.FC<RoleBannerProps> = ({ role, onChangeRole }) =>
       badgeText: 'Regional Analytics & Food Security',
     },
     admin: {
-      title: 'Government / System Admin Mode',
+      title: 'System Admin Mode',
       desc: 'Managing regional climate intelligence feeds, disease prediction parameters, user roles, and emergency response dispatching.',
       icon: <Building2 className="w-4 h-4 text-amber-600" />,
       border: 'border-amber-200 bg-amber-50 text-amber-900',
@@ -57,6 +57,18 @@ export const RoleBanner: React.FC<RoleBannerProps> = ({ role, onChangeRole }) =>
         <span className="px-2 py-0.5 rounded-full bg-white/80 font-semibold text-[10px] uppercase tracking-wider border border-current">
           {curr.badgeText}
         </span>
+        {role !== 'admin' && (
+          <a
+            href="https://wa.me/254143791311?text=Hello%20AgriShield%20Admin,%20I%20would%20like%20to%20request%20a%20role%20change%20for%20my%20account"
+            target="_blank"
+            rel="noreferrer"
+            className="px-2 py-0.5 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-900 font-extrabold text-[10px] flex items-center space-x-1 border border-amber-300 transition-colors"
+            title="Role changes are restricted. Contact Admin via WhatsApp (+254 143 791 311) to request a role change."
+          >
+            <Lock className="w-3 h-3 text-amber-700" />
+            <span>Role Change Restricted (Contact Admin)</span>
+          </a>
+        )}
       </div>
     </div>
   );

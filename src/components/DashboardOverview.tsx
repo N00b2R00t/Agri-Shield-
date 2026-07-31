@@ -54,7 +54,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     : [];
 
   // Prepare chart data from forecast
-  const chartData = weather.forecast.map((f) => ({
+  const chartData = (weather?.forecast || []).map((f) => ({
     name: f.dayName,
     RainfallMm: f.precipitationMm,
     RainProb: f.precipitationProb,
@@ -165,7 +165,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
 
           {/* High Urgency Recommendation Alert Banner */}
-          {pendingHighRecs.length > 0 && (
+          {pendingHighRecs.length > 0 && pendingHighRecs[0] && (
             <div className="mt-4 p-3 rounded-xl bg-red-950/90 border border-red-700/80 text-red-100 flex items-start sm:items-center justify-between gap-3 shadow-md">
               <div className="flex items-start space-x-2.5">
                 <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5 sm:mt-0 animate-pulse" />

@@ -35,11 +35,16 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
   const growthStage = farm?.growthStage || 'Active Season';
   const locationName = farm?.locationName || 'Kenya';
 
+  const rainMm = weather?.rainfallMm ?? 12;
+  const rainProb = weather?.rainfallProb ?? 30;
+  const currTemp = weather?.currentTemp ?? 24;
+  const humid = weather?.humidity ?? 65;
+
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: 'msg-0',
       sender: 'ai',
-      text: `Jambo Farmer! I am your AgriShield AI Advisor. I am actively monitoring ${farmName} (${cropType}, ${growthStage}) in ${locationName}.\n\nForecast today: **${weather.rainfallMm}mm rain (${weather.rainfallProb}% chance)**, Temp **${weather.currentTemp}°C**, Humidity **${weather.humidity}%**.\n\nI can help you with **Farm Advisory** (crops, fertilizer, pests, harvest) OR **AgriShield Platform Support** (how to register farms, submit reports, role switching). How can I assist you today?`,
+      text: `Jambo Farmer! I am your AgriShield AI Advisor. I am actively monitoring ${farmName} (${cropType}, ${growthStage}) in ${locationName}.\n\nForecast today: **${rainMm}mm rain (${rainProb}% chance)**, Temp **${currTemp}°C**, Humidity **${humid}%**.\n\nI can help you with **Farm Advisory** (crops, fertilizer, pests, harvest) OR **AgriShield Platform Support** (how to register farms, submit reports, role switching). How can I assist you today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       quickActions: [
         `What does AgriShield do?`,
@@ -166,7 +171,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                 <h3 className="font-bold text-sm text-stone-100">AgriShield AI Advisor</h3>
               </div>
               <p className="text-[11px] text-stone-400">
-                Aware of {farmName} • {cropType} • {weather.currentTemp}°C Rain: {weather.rainfallMm}mm
+                Aware of {farmName} • {cropType} • {currTemp}°C Rain: {rainMm}mm
               </p>
             </div>
           </div>

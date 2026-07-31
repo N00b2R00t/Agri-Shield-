@@ -86,8 +86,8 @@ export const ExtensionDashboard: React.FC<ExtensionDashboardProps> = ({
             <span>County Rain Forecast</span>
             <Activity className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-black text-cyan-300">{weather.rainfallMm} mm</div>
-          <p className="text-[11px] text-stone-400">{weather.rainfallProb}% Probability today</p>
+          <div className="text-2xl font-black text-cyan-300">{weather?.rainfallMm ?? 0} mm</div>
+          <p className="text-[11px] text-stone-400">{weather?.rainfallProb ?? 0}% Probability today</p>
         </div>
       </div>
 

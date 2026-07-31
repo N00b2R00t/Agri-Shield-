@@ -49,12 +49,39 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onOpenReportModal,
   onOpenNewFarmModal,
 }) => {
+  const safeWeather = weather || {
+    county: 'Uasin Gishu',
+    locationName: 'Eldoret Sector',
+    currentTemp: 24,
+    tempMin: 14,
+    tempMax: 26,
+    humidity: 65,
+    windSpeedKmH: 12,
+    rainfallMm: 12.5,
+    rainfallProb: 35,
+    rainRiskLevel: 'Moderate',
+    droughtProbability: 15,
+    floodProbability: 10,
+    soilMoisturePercent: 68,
+    cropPestRiskScore: 30,
+    livestockThi: 72,
+    forecast: [
+      { dayName: 'Today', tempMax: 26, tempMin: 14, precipitationMm: 12.5, precipitationProb: 35 },
+      { dayName: 'Tomorrow', tempMax: 25, tempMin: 13, precipitationMm: 8.0, precipitationProb: 25 },
+      { dayName: 'Day 3', tempMax: 27, tempMin: 15, precipitationMm: 2.0, precipitationProb: 10 },
+      { dayName: 'Day 4', tempMax: 28, tempMin: 15, precipitationMm: 0.0, precipitationProb: 5 },
+      { dayName: 'Day 5', tempMax: 26, tempMin: 14, precipitationMm: 15.0, precipitationProb: 60 },
+      { dayName: 'Day 6', tempMax: 24, tempMin: 13, precipitationMm: 20.0, precipitationProb: 75 },
+      { dayName: 'Day 7', tempMax: 25, tempMin: 14, precipitationMm: 5.0, precipitationProb: 20 },
+    ],
+  };
+
   const pendingHighRecs = farm
-    ? recommendations.filter((r) => r.farmId === farm.id && r.status === 'pending' && r.priority === 'high')
+    ? (recommendations || []).filter((r) => r && r.farmId === farm.id && r.status === 'pending' && r.priority === 'high')
     : [];
 
   // Prepare chart data from forecast
-  const chartData = (weather?.forecast || []).map((f) => ({
+  const chartData = (safeWeather?.forecast || []).map((f) => ({
     name: f.dayName,
     RainfallMm: f.precipitationMm,
     RainProb: f.precipitationProb,
@@ -200,7 +227,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </div>
           </div>
           <div className="mt-3 flex items-baseline space-x-2">
-            <span className="text-2xl font-black text-stone-900">{weather.rainRiskLevel}</span>
+            <span className="text-2xl font-black text-stone-900">{safeWeather?.rainRiskLevel || 'Moderate'}</span>
             <span className="text-xs text-stone-500 font-medium">Risk Exposure</span>
           </div>
           <div className="mt-2 w-full bg-stone-100 h-2 rounded-full overflow-hidden">
@@ -212,7 +239,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             />
           </div>
           <p className="text-[11px] text-stone-500 mt-2">
-            Washout risk: <strong className="text-stone-800">{weather.floodProbability}%</strong> | Pest risk high
+            Washout risk: <strong className="text-stone-800">{safeWeather?.floodProbability ?? 10}%</strong> | Pest risk high
           </p>
         </div>
 
@@ -253,20 +280,20 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
           <div className="mt-3 flex items-baseline space-x-2">
             <span className="text-2xl font-black text-stone-900">
-              {weather.livestockThi ? weather.livestockThi : `${weather.soilMoisturePercent}%`}
+              {safeWeather?.livestockThi ? safeWeather.livestockThi : `${safeWeather?.soilMoisturePercent ?? 68}%`}
             </span>
             <span className="text-xs text-amber-600 font-medium">
-              {weather.livestockThi && weather.livestockThi > 72 ? 'Mild Heat Stress' : 'Moisture Saturation'}
+              {safeWeather?.livestockThi && safeWeather.livestockThi > 72 ? 'Mild Heat Stress' : 'Moisture Saturation'}
             </span>
           </div>
           <div className="mt-2 w-full bg-stone-100 h-2 rounded-full overflow-hidden">
             <div
               className="h-full rounded-full bg-blue-500"
-              style={{ width: `${weather.soilMoisturePercent}%` }}
+              style={{ width: `${safeWeather?.soilMoisturePercent ?? 68}%` }}
             />
           </div>
           <p className="text-[11px] text-stone-500 mt-2">
-            Soil: <strong className="text-stone-800">{weather.soilMoisturePercent}%</strong> | Flood: <strong className="text-stone-800">{weather.floodProbability}%</strong>
+            Soil: <strong className="text-stone-800">{safeWeather?.soilMoisturePercent ?? 68}%</strong> | Flood: <strong className="text-stone-800">{safeWeather?.floodProbability ?? 10}%</strong>
           </p>
         </div>
 
@@ -358,7 +385,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
           {/* 7 Day Micro Card Row */}
           <div className="grid grid-cols-7 gap-1.5 pt-2 border-t border-stone-100">
-            {weather.forecast.map((f, i) => (
+            {(safeWeather?.forecast || []).map((f, i) => (
               <div
                 key={i}
                 className={`p-2 rounded-xl text-center border text-xs transition-colors ${
@@ -393,7 +420,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <Thermometer className="w-4 h-4 text-amber-400" />
                   <span>Current Air Temp</span>
                 </span>
-                <span className="font-bold text-stone-100 text-sm">{weather.currentTemp}°C</span>
+                <span className="font-bold text-stone-100 text-sm">{safeWeather?.currentTemp ?? 24}°C</span>
               </div>
 
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-stone-800/80 border border-stone-750">
@@ -401,7 +428,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <Droplets className="w-4 h-4 text-blue-400" />
                   <span>Relative Humidity</span>
                 </span>
-                <span className="font-bold text-stone-100 text-sm">{weather.humidity}%</span>
+                <span className="font-bold text-stone-100 text-sm">{safeWeather?.humidity ?? 65}%</span>
               </div>
 
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-stone-800/80 border border-stone-750">
@@ -409,7 +436,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <Wind className="w-4 h-4 text-teal-400" />
                   <span>Wind Speed / Direction</span>
                 </span>
-                <span className="font-bold text-stone-100 text-sm">{weather.windSpeedKmH} km/h (NE)</span>
+                <span className="font-bold text-stone-100 text-sm">{safeWeather?.windSpeedKmH ?? 12} km/h (NE)</span>
               </div>
 
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-stone-800/80 border border-stone-750">
@@ -417,7 +444,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <CloudRain className="w-4 h-4 text-indigo-400" />
                   <span>24h Expected Rainfall</span>
                 </span>
-                <span className="font-bold text-blue-400 text-sm">{weather.rainfallMm} mm</span>
+                <span className="font-bold text-blue-400 text-sm">{safeWeather?.rainfallMm ?? 12.5} mm</span>
               </div>
             </div>
           </div>

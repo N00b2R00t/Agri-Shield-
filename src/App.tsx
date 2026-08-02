@@ -42,6 +42,7 @@ import {
   deleteReportFromDb,
   deleteRecommendationFromDb,
   deletePredictionFromDb,
+  addPredictionToDb,
   deleteMarketPriceFromDb,
   addMarketPriceToDb,
   createExpressSession,
@@ -388,22 +389,28 @@ export default function App() {
   };
 
   const handleUpdateUserRole = async (id: string, newRole: UserRole) => {
-    let updatedUser: UserProfile | undefined;
+    let updatedTargetUser: UserProfile | undefined;
     setUsersList((prev) =>
       prev.map((u) => {
-        if (u.id === id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase())) {
-          updatedUser = { ...u, role: newRole };
-          return updatedUser;
+        if (u.id === id) {
+          updatedTargetUser = { ...u, role: newRole };
+          return updatedTargetUser;
         }
         return u;
       })
     );
 
-    if (updatedUser) {
-      await saveProfileToDb(updatedUser);
-      if (id === user.id || (updatedUser.email && user.email && updatedUser.email.toLowerCase() === user.email.toLowerCase())) {
-        setUser(updatedUser);
-        localStorage.setItem('agrishield_session_user', JSON.stringify(updatedUser));
+    if (updatedTargetUser) {
+      await saveProfileToDb(updatedTargetUser);
+      const isSelf =
+        updatedTargetUser.id === user.id ||
+        (Boolean(updatedTargetUser.email) &&
+          Boolean(user.email) &&
+          updatedTargetUser.email.toLowerCase() === user.email.toLowerCase());
+
+      if (isSelf) {
+        setUser(updatedTargetUser);
+        localStorage.setItem('agrishield_session_user', JSON.stringify(updatedTargetUser));
         setActiveTab('dashboard');
       }
     }
@@ -568,19 +575,76 @@ export default function App() {
     setUsersList((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
   };
 
-  // Broadcast Alert from Extension Officer & persist to Firestore
-  const handleSendBroadcast = async (title: string, message: string) => {
+  // Broadcast Outbreak & Emergency Alert from Officer/Admin & persist across system
+  const handleSendBroadcast = async (
+    title: string,
+    message: string,
+    severity: 'info' | 'warning' | 'critical' = 'critical',
+    type: string = 'pest'
+  ) => {
+    // 1. In-app & Push Alert Notification
     const newNotif: AlertNotification = {
       id: `notif-${Date.now()}`,
       title,
-      type: 'weather_warning',
-      severity: 'critical',
+      type: (type as any) || 'weather_warning',
+      severity: severity || 'critical',
       message,
       timestamp: new Date().toISOString(),
       read: false,
     };
     setNotifications((prev) => [newNotif, ...prev]);
     await addNotificationToDb(newNotif);
+
+    // 2. Verified Community Incident Report so nearby farmers see it in Community Intel & Risk Radar
+    const newReport: CommunityReport = {
+      id: `rep-${Date.now()}`,
+      userId: user.id,
+      userName: `${user.name} (Official Outbreak Alert)`,
+      farmName: `${user.county || 'County'} Outbreak Command`,
+      reportType: (type === 'disease' ? 'disease' : type === 'flood' ? 'weather' : type === 'heatwave' ? 'weather' : 'pest') as any,
+      cropAffected: title,
+      severity: severity === 'critical' ? 'critical' : severity === 'warning' ? 'high' : 'medium',
+      description: message,
+      lat: (activeFarm ? activeFarm.lat : -0.5) + (Math.random() * 0.01 - 0.005),
+      lng: (activeFarm ? activeFarm.lng : 35.2) + (Math.random() * 0.01 - 0.005),
+      createdAt: new Date().toISOString(),
+      verified: true,
+      upvotes: 5,
+      distanceKm: 0.2,
+    };
+    setReports((prev) => [newReport, ...prev]);
+    await addReportToDb(newReport);
+
+    // 3. Sub-County Outbreak Radar Item so users see it on Outbreak Radar & AI Risk Predictions
+    const newPrediction: DiseaseRiskPrediction = {
+      id: `pred-${Date.now()}`,
+      diseaseName: title,
+      pestName: title,
+      cropTarget: 'Maize & Regional Crops',
+      category: type === 'disease' ? 'livestock' : 'crop',
+      riskLevel: severity === 'critical' ? 'Critical' : severity === 'warning' ? 'High' : 'Medium',
+      riskScore: severity === 'critical' ? 92 : severity === 'warning' ? 78 : 55,
+      spreadVector: 'Wind Vectors & Sub-County Migration',
+      triggerFactors: ['Sub-County Vector Swarm', 'Favorable Micro-Climate'],
+      mitigationStrategy: message,
+      predictedArea: `${user.county || 'Regional'} Sub-Counties`,
+      outbreakProbabilityNext7Days: severity === 'critical' ? 90 : severity === 'warning' ? 75 : 50,
+    };
+    setPredictions((prev) => [newPrediction, ...prev]);
+    await addPredictionToDb(newPrediction);
+  };
+
+  const handleAddPrediction = async (newPred: DiseaseRiskPrediction) => {
+    setPredictions((prev) => [newPred, ...prev]);
+    await addPredictionToDb(newPred);
+
+    // Trigger system alert & community report for nearby farmers
+    handleSendBroadcast(
+      newPred.diseaseName,
+      newPred.mitigationStrategy,
+      newPred.riskLevel === 'Critical' ? 'critical' : newPred.riskLevel === 'High' ? 'warning' : 'info',
+      newPred.category === 'livestock' ? 'disease' : 'pest'
+    );
   };
 
   const getNavTabsForRole = (role: UserRole) => {
@@ -839,7 +903,7 @@ export default function App() {
                 reports={reports}
                 predictions={predictions}
                 onNavigate={(tab) => setActiveTab(tab as any)}
-                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message)}
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type)}
               />
             )}
             {activeTab === 'regional_farms' && (
@@ -847,7 +911,7 @@ export default function App() {
             )}
             {activeTab === 'broadcast' && (
               <BroadcastDispatcher
-                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message)}
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type)}
               />
             )}
             {activeTab === 'field_advisory' && (
@@ -860,7 +924,13 @@ export default function App() {
               />
             )}
             {activeTab === 'outbreak_radar' && (
-              <PestOutbreakRadar predictions={predictions} reports={reports} />
+              <PestOutbreakRadar
+                predictions={predictions}
+                reports={reports}
+                onAddPrediction={handleAddPrediction}
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type)}
+                onDeletePrediction={handleDeletePrediction}
+              />
             )}
             {activeTab === 'simulations' && (
               <ExtensionSimulations activeFarm={activeFarm} />
@@ -951,7 +1021,7 @@ export default function App() {
             )}
             {activeTab === 'broadcast' && (
               <SystemBroadcast
-                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message)}
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type)}
               />
             )}
             {activeTab === 'risk' && (

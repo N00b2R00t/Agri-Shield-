@@ -675,14 +675,17 @@ Cover BOTH crops AND livestock where applicable (e.g., THI shade management, sil
   app.post('/api/gemini/whatif', async (req, res) => {
     const { farm, input } = req.body;
 
-    const promptText = `Farm Context: ${farm?.name || 'Green Valley Farm'}, Crop: ${input?.cropType || farm?.cropType || 'Maize'}, Area: ${farm?.areaHectares || 2.5} ha, Soil: ${farm?.soilType || 'Loam'}, Irrigation: ${farm?.irrigationMethod || 'Rainfed'}.
+    const LIVESTOCK_TYPES = ['Dairy Cattle', 'Beef Cattle', 'Dairy Goats', 'Poultry Layers', 'Broiler Poultry', 'Sheep & Goats', 'Pigs / Swine'];
+    const isLivestock = LIVESTOCK_TYPES.includes(input?.cropType || '');
+
+    const promptText = `Agribusiness Enterprise: ${input?.cropType || farm?.cropType || 'Maize'}, Enterprise Category: ${isLivestock ? 'Livestock / Animal Husbandry' : 'Crop / Horticulture'}, Farm Context: ${farm?.name || 'Green Valley Farm'}, Area/Stock Count: ${farm?.areaHectares || 2.5} ha/units, Location: ${farm?.county || 'Uasin Gishu'}.
 Simulation Variables:
-- Planting Date Shift: ${input?.plantingDateOffsetDays || 0} days
-- Irrigation Adjustment: ${input?.irrigationLevelPercent || 100}%
-- Fertilizer Rate: ${input?.fertilizerKgPerHa || 50} kg/ha
+- ${isLivestock ? 'Breeding & Stocking Cycle Shift' : 'Planting Date Shift'}: ${input?.plantingDateOffsetDays || 0} days
+${isLivestock ? '- Irrigation: Not Applicable (Livestock Enterprise)' : `- Irrigation Adjustment: ${input?.irrigationLevelPercent || 100}% Water Rate`}
+- ${isLivestock ? 'Feed Concentrate & Ration Supplement' : 'Fertilizer Rate'}: ${input?.fertilizerKgPerHa || 50} ${isLivestock ? 'kg/head/day' : 'kg/ha'}
 - Weather Scenario: ${input?.expectedWeatherScenario || 'normal'}`;
 
-    const systemInstruction = `You are AgriShield AI's What-If Agricultural Risk Simulator. Estimate agricultural outcomes under hypothetical management shifts and climate scenarios. Return a valid JSON object matching the requested schema.`;
+    const systemInstruction = `You are AgriShield AI's What-If Agricultural & Livestock Risk Simulator. Estimate agricultural outcomes under hypothetical management shifts and climate scenarios. Return a valid JSON object matching the requested schema.`;
 
     const aiClient = getAiClient();
     if (aiClient) {

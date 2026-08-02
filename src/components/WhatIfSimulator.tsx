@@ -19,6 +19,16 @@ interface WhatIfSimulatorProps {
   farm?: Farm | null;
 }
 
+const LIVESTOCK_ENTERPRISES = [
+  'Dairy Cattle',
+  'Beef Cattle',
+  'Dairy Goats',
+  'Poultry Layers',
+  'Broiler Poultry',
+  'Sheep & Goats',
+  'Pigs / Swine',
+];
+
 export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({ farm }) => {
   const [input, setInput] = useState<WhatIfInput>({
     cropType: farm ? farm.cropType : 'Maize',
@@ -27,6 +37,8 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({ farm }) => {
     fertilizerKgPerHa: 50,
     expectedWeatherScenario: 'heavy_flooding',
   });
+
+  const isLivestock = LIVESTOCK_ENTERPRISES.includes(input.cropType);
 
   const [simulation, setSimulation] = useState<WhatIfOutput>({
     expectedYieldTonsPerHa: 4.2,
@@ -104,7 +116,7 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({ farm }) => {
             <button
               onClick={() => {
                 setInput({
-                  cropType: farm.cropType,
+                  cropType: farm?.cropType || 'Maize',
                   plantingDateOffsetDays: 0,
                   irrigationLevelPercent: 100,
                   fertilizerKgPerHa: 50,
@@ -118,9 +130,9 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({ farm }) => {
             </button>
           </div>
 
-          {/* Variable 1: Crop or Livestock Selection */}
+          {/* Option 1: Target Agribusiness Enterprise */}
           <div>
-            <label className="block text-stone-700 font-bold mb-1">Target Agribusiness Enterprise</label>
+            <label className="block text-stone-700 font-bold mb-1">Option 1: Target Agribusiness Enterprise</label>
             <select
               value={input.cropType}
               onChange={(e) => setInput({ ...input, cropType: e.target.value as CropType })}
@@ -132,20 +144,29 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({ farm }) => {
                 <option value="Tomatoes">Tomatoes (F1 Variety)</option>
                 <option value="Beans">Beans (Rosecoco)</option>
                 <option value="Coffee">Coffee (Arabica)</option>
-              </optgroup>
-              <optgroup label="Livestock & Forage">
+                <option value="Wheat">Wheat (Grain)</option>
+                <option value="Rice">Rice (Irrigated Paddy)</option>
+                <option value="Potatoes">Potatoes (Shangi)</option>
                 <option value="Napier Grass">Napier Grass (Fodder Silage)</option>
+              </optgroup>
+              <optgroup label="Livestock & Animal Husbandry">
                 <option value="Dairy Cattle">Dairy Cattle (Milk Yield Optimization)</option>
+                <option value="Beef Cattle">Beef Cattle (Weight Gain & Fattening)</option>
                 <option value="Dairy Goats">Dairy Goats (Galla / Toggenburg)</option>
                 <option value="Poultry Layers">Poultry Layers (Kienyeji Hybrid)</option>
+                <option value="Broiler Poultry">Broiler Poultry (Meat Production)</option>
+                <option value="Sheep & Goats">Sheep & Goats (Shoats Herd)</option>
+                <option value="Pigs / Swine">Pigs / Swine (Commercial Porker)</option>
               </optgroup>
             </select>
           </div>
 
-          {/* Variable 2: Planting Date Offset */}
+          {/* Option 2: Date Shift */}
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="text-stone-700 font-bold">Planting Date Shift</label>
+              <label className="text-stone-700 font-bold">
+                Option 2: {isLivestock ? 'Breeding / Batch Cycle Shift' : 'Planting Date Shift'}
+              </label>
               <span className="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded text-[11px]">
                 {input.plantingDateOffsetDays === 0
                   ? 'On Schedule'
@@ -170,31 +191,35 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({ farm }) => {
             </div>
           </div>
 
-          {/* Variable 3: Irrigation Adjustment */}
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-stone-700 font-bold">Irrigation Application</label>
-              <span className="font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded text-[11px]">
-                {input.irrigationLevelPercent}% Water Rate
-              </span>
+          {/* Option 3: Irrigation Application (HIDDEN FOR LIVESTOCK) */}
+          {!isLivestock && (
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-stone-700 font-bold">Option 3: Irrigation Application</label>
+                <span className="font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded text-[11px]">
+                  {input.irrigationLevelPercent}% Water Rate
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={200}
+                step={10}
+                value={input.irrigationLevelPercent}
+                onChange={(e) => setInput({ ...input, irrigationLevelPercent: parseInt(e.target.value) })}
+                className="w-full accent-blue-600"
+              />
             </div>
-            <input
-              type="range"
-              min={0}
-              max={200}
-              step={10}
-              value={input.irrigationLevelPercent}
-              onChange={(e) => setInput({ ...input, irrigationLevelPercent: parseInt(e.target.value) })}
-              className="w-full accent-blue-600"
-            />
-          </div>
+          )}
 
-          {/* Variable 4: Fertilizer Rate */}
+          {/* Option 4: Fertilizer Rate or Livestock Feed Ration */}
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="text-stone-700 font-bold">Fertilizer Top-Dressing</label>
+              <label className="text-stone-700 font-bold">
+                {isLivestock ? 'Option 3: Feed Concentrate & Supplement' : 'Option 4: Fertilizer Top-Dressing'}
+              </label>
               <span className="font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded text-[11px]">
-                {input.fertilizerKgPerHa} kg/ha
+                {input.fertilizerKgPerHa} {isLivestock ? 'kg/head/day' : 'kg/ha'}
               </span>
             </div>
             <input
@@ -208,9 +233,11 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({ farm }) => {
             />
           </div>
 
-          {/* Variable 5: Climate Scenario */}
+          {/* Option 5: Climate Scenario */}
           <div>
-            <label className="block text-stone-700 font-bold mb-1">Exogenous Climate Shock</label>
+            <label className="block text-stone-700 font-bold mb-1">
+              {isLivestock ? 'Option 4: Exogenous Climate Shock' : 'Option 5: Exogenous Climate Shock'}
+            </label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { id: 'normal', label: 'Normal Weather', icon: '☀️' },
@@ -233,6 +260,19 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({ farm }) => {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Calculate Scenario Button */}
+          <div className="pt-2 border-t border-stone-200">
+            <button
+              type="button"
+              onClick={handleRunSimulation}
+              disabled={isLoading}
+              className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs flex items-center justify-center space-x-2 shadow-md disabled:opacity-50 transition-transform active:scale-95"
+            >
+              <Sparkles className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>{isLoading ? 'Calculating Scenario...' : 'Calculate Scenario'}</span>
+            </button>
           </div>
 
         </div>

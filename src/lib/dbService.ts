@@ -448,6 +448,28 @@ export async function deletePredictionFromDb(id: string): Promise<void> {
   }
 }
 
+export async function addPredictionToDb(p: DiseaseRiskPrediction): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await supabase.from('disease_predictions').insert({
+      id: p.id,
+      disease_name: p.diseaseName,
+      pest_name: p.pestName || p.diseaseName,
+      crop_target: p.cropTarget,
+      category: p.category || 'crop',
+      risk_level: p.riskLevel,
+      risk_score: p.riskScore,
+      spread_vector: p.spreadVector,
+      trigger_factors: p.triggerFactors,
+      mitigation_strategy: p.mitigationStrategy,
+      predicted_area: p.predictedArea,
+      outbreak_probability_next_7_days: p.outbreakProbabilityNext7Days,
+    });
+  } catch (e) {
+    console.error('Error adding disease prediction to Supabase:', e);
+  }
+}
+
 export async function deleteMarketPriceFromDb(id: string): Promise<void> {
   if (!isSupabaseConfigured()) return;
   try {

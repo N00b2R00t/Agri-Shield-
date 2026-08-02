@@ -9,16 +9,16 @@ interface InteractiveMapProps {
   activeFarm?: Farm | null;
   farms: Farm[];
   reports: CommunityReport[];
-  markets: MarketPrice[];
+  markets?: MarketPrice[];
   onReportClick?: (report: CommunityReport) => void;
-  onRequestNewReport: (lat: number, lng: number) => void;
+  onRequestNewReport?: (lat: number, lng: number) => void;
 }
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   activeFarm,
-  farms,
-  reports,
-  markets,
+  farms = [],
+  reports = [],
+  markets = [],
   onReportClick,
   onRequestNewReport,
 }) => {
@@ -74,7 +74,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     // Click handler for dropping reports
     map.on('click', (e: L.LeafletMouseEvent) => {
-      if (clickToReportMode) {
+      if (clickToReportMode && onRequestNewReport) {
         onRequestNewReport(e.latlng.lat, e.latlng.lng);
         setClickToReportMode(false);
       }

@@ -47,41 +47,69 @@ export const NGODashboard: React.FC<NGODashboardProps> = ({
 
       {/* Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('vulnerability')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-amber-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to load Drought Risk & Vulnerability Index"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Drought Risk Index</span>
-            <Activity className="w-4 h-4 text-amber-400" />
+            <Activity className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-amber-300">{droughtProb}%</div>
-          <p className="text-[11px] text-stone-400">Regional water stress probability</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>Regional water stress probability</span>
+            <ArrowRight className="w-3 h-3 text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('gis_map')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-blue-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to launch Climate GIS Spatial Map"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Flood Risk Probability</span>
-            <Activity className="w-4 h-4 text-blue-400" />
+            <Activity className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-blue-300">{floodProb}%</div>
-          <p className="text-[11px] text-stone-400">High catchment precipitation</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>High catchment precipitation</span>
+            <ArrowRight className="w-3 h-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('gis_map')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-emerald-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to view Monitored Smallholder Plot GIS Map"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Monitored Smallholders</span>
-            <Globe className="w-4 h-4 text-emerald-400" />
+            <Globe className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-emerald-400">{farms.length} Plots</div>
-          <p className="text-[11px] text-stone-400">Targeting resilience programs</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>Targeting resilience programs</span>
+            <ArrowRight className="w-3 h-3 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('reports')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-cyan-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to load Verified Field Incident Reports"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Verified Incidents</span>
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+            <ShieldCheck className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-white">{reports.filter((r) => r.verified).length} Verified</div>
-          <p className="text-[11px] text-stone-400">Out of {reports.length} crowdsourced reports</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>Out of {reports.length} crowdsourced reports</span>
+            <ArrowRight className="w-3 h-3 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
       </div>
 
       {/* Navigation */}

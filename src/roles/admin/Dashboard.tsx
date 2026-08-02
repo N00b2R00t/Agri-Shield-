@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserProfile, Farm, CommunityReport, DiseaseRiskPrediction } from '../../types';
-import { ShieldCheck, Users, Database, Radio, Activity, ArrowRight, Lock } from 'lucide-react';
+import { ShieldCheck, Users, Database, Radio, Activity, ArrowRight, Lock, MapPin } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: UserProfile;
@@ -37,52 +37,89 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={() => onNavigate('users')}
-          className="px-4 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs flex items-center space-x-2 shadow-lg transition-all z-10"
-        >
-          <Users className="w-4 h-4" />
-          <span>Manage Users & Roles ({userCount})</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3 z-10">
+          <button
+            onClick={() => onNavigate('gis_map')}
+            className="px-4 py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-400 text-stone-950 font-bold text-xs flex items-center space-x-2 shadow-lg transition-all"
+          >
+            <MapPin className="w-4 h-4" />
+            <span>Launch Climate GIS Spatial Map</span>
+          </button>
+          <button
+            onClick={() => onNavigate('users')}
+            className="px-4 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs flex items-center space-x-2 shadow-lg transition-all"
+          >
+            <Users className="w-4 h-4" />
+            <span>Manage Users & Roles ({userCount})</span>
+          </button>
+        </div>
       </div>
 
       {/* Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('users')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-emerald-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to manage user accounts and roles"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Total Registered Accounts</span>
-            <Users className="w-4 h-4 text-emerald-400" />
+            <Users className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-white">{userCount} Accounts</div>
-          <p className="text-[11px] text-stone-400">Synced with Supabase DB</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>Synced with Supabase DB</span>
+            <ArrowRight className="w-3 h-3 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('gis_map')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-cyan-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to view registered plots on Climate GIS Spatial Map"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Registered Farms</span>
-            <Database className="w-4 h-4 text-cyan-400" />
+            <Database className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-cyan-300">{farms.length} Plots</div>
-          <p className="text-[11px] text-stone-400">Acreage total: {farms.reduce((a, f) => a + f.areaHectares, 0).toFixed(1)} Ha</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>Acreage total: {farms.reduce((a, f) => a + f.areaHectares, 0).toFixed(1)} Ha</span>
+            <ArrowRight className="w-3 h-3 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('risk')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-amber-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to manage Disease Risk Engines"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Active Risk Engines</span>
-            <Activity className="w-4 h-4 text-amber-400" />
+            <Activity className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-amber-300">{predictions.length} Models</div>
-          <p className="text-[11px] text-stone-400">Fall Armyworm & ECF telemetry</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>Fall Armyworm & ECF telemetry</span>
+            <ArrowRight className="w-3 h-3 text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('gis_map')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-red-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to view Field Incidents on Climate GIS Map"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Field Incidents</span>
-            <Radio className="w-4 h-4 text-red-400" />
+            <Radio className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-red-300">{reports.length} Incidents</div>
-          <p className="text-[11px] text-stone-400">{reports.filter((r) => r.verified).length} Verified</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>{reports.filter((r) => r.verified).length} Verified</span>
+            <ArrowRight className="w-3 h-3 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
       </div>
 
       {/* Navigation */}

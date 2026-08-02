@@ -43,6 +43,13 @@ export const ExtensionDashboard: React.FC<ExtensionDashboardProps> = ({
 
         <div className="flex flex-wrap items-center gap-3 z-10">
           <button
+            onClick={() => onNavigate('gis_map')}
+            className="px-4 py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-400 text-stone-950 font-bold text-xs flex items-center space-x-2 shadow-lg transition-all"
+          >
+            <MapPin className="w-4 h-4" />
+            <span>Launch Climate GIS Spatial Map</span>
+          </button>
+          <button
             onClick={() => onNavigate('broadcast')}
             className="px-4 py-2.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-bold text-xs flex items-center space-x-2 shadow-lg transition-all"
           >
@@ -54,41 +61,69 @@ export const ExtensionDashboard: React.FC<ExtensionDashboardProps> = ({
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('regional_farms')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-cyan-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to view registered regional smallholders"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Registered Farmers</span>
-            <Users className="w-4 h-4 text-cyan-400" />
+            <Users className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-white">{farmersCount} Farmers</div>
-          <p className="text-[11px] text-stone-400">Under county supervision</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>Under county supervision</span>
+            <ArrowRight className="w-3 h-3 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('gis_map')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-emerald-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to view inspected acreage on GIS Spatial Map"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Total Inspected Acreage</span>
-            <MapPin className="w-4 h-4 text-emerald-400" />
+            <MapPin className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-emerald-400">{farms.reduce((acc, f) => acc + (f.areaHectares || 0), 0).toFixed(1)} Ha</div>
-          <p className="text-[11px] text-stone-400">{farms.length} Active plot plots</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>{farms.length} Active plot plots</span>
+            <ArrowRight className="w-3 h-3 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('outbreak_radar')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-red-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to load Pest & Outbreak Radar"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Critical Outbreaks</span>
-            <AlertTriangle className="w-4 h-4 text-red-400" />
+            <AlertTriangle className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-red-300">{criticalPredictions.length} High Risks</div>
-          <p className="text-[11px] text-stone-400">{reports.length} Field incident reports</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>{reports.length} Field incident reports</span>
+            <ArrowRight className="w-3 h-3 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('gis_map')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-amber-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to view County Rain & Spatial Risk on GIS Map"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>County Rain Forecast</span>
-            <Activity className="w-4 h-4 text-amber-400" />
+            <Activity className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-cyan-300">{weather?.rainfallMm ?? 0} mm</div>
-          <p className="text-[11px] text-stone-400">{weather?.rainfallProb ?? 0}% Probability today</p>
-        </div>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>{weather?.rainfallProb ?? 0}% Probability today</span>
+            <ArrowRight className="w-3 h-3 text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
+        </button>
       </div>
 
       {/* Extension Officer Navigation Grid */}

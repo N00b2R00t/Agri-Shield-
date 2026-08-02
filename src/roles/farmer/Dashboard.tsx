@@ -50,6 +50,13 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
 
         <div className="flex flex-wrap items-center gap-3 z-10">
           <button
+            onClick={() => onNavigate('gis_map')}
+            className="px-4 py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-400 text-stone-950 font-bold text-xs flex items-center space-x-2 shadow-lg transition-all"
+          >
+            <MapPin className="w-4 h-4" />
+            <span>Launch Climate GIS Spatial Map</span>
+          </button>
+          <button
             onClick={() => onNavigate('advisory')}
             className="px-4 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs flex items-center space-x-2 shadow-lg transition-all"
           >
@@ -67,51 +74,71 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('my_farms')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-emerald-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to manage plots and herds"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Registered Farms</span>
-            <MapPin className="w-4 h-4 text-emerald-400" />
+            <MapPin className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-white">{farms.length} Plots</div>
-          <p className="text-[11px] text-stone-400">
-            {activeFarm ? `Active: ${activeFarm.name} (${activeFarm.areaHectares} Ha)` : 'No active farm selected'}
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>{activeFarm ? `Active: ${activeFarm.name} (${activeFarm.areaHectares} Ha)` : 'No active farm selected'}</span>
+            <ArrowRight className="w-3 h-3 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
           </p>
-        </div>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('gis_map')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-cyan-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to open GIS Spatial Micro-Climate Map"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Local Micro-Climate</span>
-            <CloudRain className="w-4 h-4 text-cyan-400" />
+            <CloudRain className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-cyan-300">{currentTemp}°C / {rainfallMm}mm</div>
-          <p className="text-[11px] text-stone-400">
-            Rain chance today: <span className="text-emerald-400 font-bold">{rainfallProb}%</span>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>Rain chance today: <span className="text-emerald-400 font-bold">{rainfallProb}%</span></span>
+            <ArrowRight className="w-3 h-3 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
           </p>
-        </div>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('advisory')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-rose-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to view AI Health Advisory"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Crop & Livestock Health</span>
-            <Heart className="w-4 h-4 text-rose-400" />
+            <Heart className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-emerald-400">
             {activeFarm ? `${activeFarm.cropHealthScore}% Health` : '92% Average'}
           </div>
-          <p className="text-[11px] text-stone-400">
-            THI Stress Index: <span className="text-amber-400 font-bold">{livestockThi}</span>
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>THI Stress Index: <span className="text-amber-400 font-bold">{livestockThi}</span></span>
+            <ArrowRight className="w-3 h-3 text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity" />
           </p>
-        </div>
+        </button>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-2 text-stone-100">
+        <button
+          onClick={() => onNavigate('risk_alerts')}
+          className="bg-stone-900 hover:bg-stone-850 border border-stone-800 hover:border-amber-500/50 rounded-2xl p-4 space-y-2 text-stone-100 text-left transition-all cursor-pointer group"
+          title="Click to view Risk Radar alerts"
+        >
           <div className="flex items-center justify-between text-stone-400 text-xs font-semibold">
             <span>Active Risk Alerts</span>
-            <ShieldAlert className="w-4 h-4 text-amber-400" />
+            <ShieldAlert className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-2xl font-black text-amber-300">{unreadAlerts.length} Unread</div>
-          <p className="text-[11px] text-stone-400">
-            {highPriorityRecs.length} High-priority advisory actions
+          <p className="text-[11px] text-stone-400 flex items-center justify-between">
+            <span>{highPriorityRecs.length} High-priority advisory actions</span>
+            <ArrowRight className="w-3 h-3 text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
           </p>
-        </div>
+        </button>
       </div>
 
       {/* Quick Action Navigation Grid */}

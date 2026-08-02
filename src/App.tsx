@@ -731,6 +731,7 @@ export default function App() {
       case 'farmer':
         return [
           { id: 'dashboard', label: 'Farm Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+          { id: 'gis_map', label: 'Climate GIS Map', icon: <MapPin className="w-4 h-4 text-blue-400" /> },
           { id: 'my_farms', label: 'My Plots & Herd', icon: <Sprout className="w-4 h-4 text-emerald-400" /> },
           { id: 'advisory', label: 'Smart Advisory', icon: <Sparkles className="w-4 h-4 text-amber-400" />, badge: recommendations.filter(r => r.status === 'pending').length },
           { id: 'risk_alerts', label: 'Risk Radar', icon: <AlertTriangle className="w-4 h-4 text-red-400" /> },
@@ -742,6 +743,7 @@ export default function App() {
       case 'extension_officer':
         return [
           { id: 'dashboard', label: 'Officer Dashboard', icon: <Building2 className="w-4 h-4 text-blue-400" /> },
+          { id: 'gis_map', label: 'Climate GIS Map', icon: <MapPin className="w-4 h-4 text-blue-400" /> },
           { id: 'regional_farms', label: 'Regional Smallholders', icon: <Sprout className="w-4 h-4 text-emerald-400" /> },
           { id: 'broadcast', label: 'Emergency Broadcast', icon: <Radio className="w-4 h-4 text-red-400" /> },
           { id: 'field_advisory', label: 'Field Advisory', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
@@ -764,6 +766,7 @@ export default function App() {
       case 'admin':
         return [
           { id: 'dashboard', label: 'Director Control', icon: <Lock className="w-4 h-4 text-red-400" /> },
+          { id: 'gis_map', label: 'Climate GIS Map', icon: <MapPin className="w-4 h-4 text-blue-400" /> },
           { id: 'users', label: 'User & Role Manager', icon: <Users className="w-4 h-4 text-emerald-400" />, badge: usersList.length },
           { id: 'broadcast', label: 'Global Broadcast', icon: <Radio className="w-4 h-4 text-red-400" /> },
           { id: 'risk', label: 'Disease Risk Engines', icon: <Bug className="w-4 h-4 text-amber-400" /> },
@@ -779,7 +782,7 @@ export default function App() {
 
   // Auto fallback if active tab is disallowed for current role
   useEffect(() => {
-    const isAllowed = navTabs.some((t) => t.id === activeTab);
+    const isAllowed = navTabs.some((t) => t.id === activeTab) || ['gis_map', 'vulnerability', 'simulator', 'reports', 'community', 'risk_alerts'].includes(activeTab);
     if (!isAllowed && navTabs.length > 0) {
       setActiveTab(navTabs[0].id as any);
     }
@@ -897,7 +900,17 @@ export default function App() {
 
       {/* Active Tab View Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        
+        {/* SHARED GIS MAP & CLIMATE VIEWS ACCESSIBLE TO ALL ROLES */}
+        {activeTab === 'gis_map' && (
+          <ClimateGISMap farms={farms} reports={reports} markets={markets} user={user} />
+        )}
+        {activeTab === 'vulnerability' && (
+          <VulnerabilityAnalytics weather={weather} farms={farms} />
+        )}
+        {activeTab === 'simulator' && (
+          <ClimateSimulator activeFarm={activeFarm} />
+        )}
+
         {/* FARMER ROLE VIEWS */}
         {user.role === 'farmer' && (
           <>
@@ -1047,15 +1060,6 @@ export default function App() {
                 reports={reports}
                 onNavigate={(tab) => setActiveTab(tab as any)}
               />
-            )}
-            {activeTab === 'gis_map' && (
-              <ClimateGISMap farms={farms} reports={reports} user={user} />
-            )}
-            {activeTab === 'vulnerability' && (
-              <VulnerabilityAnalytics weather={weather} farms={farms} />
-            )}
-            {activeTab === 'simulator' && (
-              <ClimateSimulator activeFarm={activeFarm} />
             )}
             {activeTab === 'reports' && (
               <NGOCommunityReports

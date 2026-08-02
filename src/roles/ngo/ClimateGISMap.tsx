@@ -1,14 +1,15 @@
 import React from 'react';
-import { Farm, CommunityReport, UserProfile } from '../../types';
+import { Farm, CommunityReport, UserProfile, MarketPrice } from '../../types';
 import { InteractiveMap } from '../../components/InteractiveMap';
 
 interface ClimateGISMapProps {
   farms: Farm[];
   reports: CommunityReport[];
+  markets?: MarketPrice[];
   user: UserProfile;
 }
 
-export const ClimateGISMap: React.FC<ClimateGISMapProps> = ({ farms, reports, user }) => {
+export const ClimateGISMap: React.FC<ClimateGISMapProps> = ({ farms = [], reports = [], markets = [], user }) => {
   return (
     <div className="space-y-6">
       <div className="bg-stone-900 border border-stone-800 p-5 rounded-3xl space-y-1">
@@ -19,8 +20,8 @@ export const ClimateGISMap: React.FC<ClimateGISMapProps> = ({ farms, reports, us
       <InteractiveMap
         farms={farms}
         reports={reports}
+        markets={markets}
         activeFarm={farms[0] || null}
-        onSelectFarm={() => {}}
       />
     </div>
   );

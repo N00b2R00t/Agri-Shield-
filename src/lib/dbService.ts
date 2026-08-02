@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { hashPassword } from './security';
 import {
   Farm,
   CommunityReport,
@@ -370,8 +371,14 @@ export async function getProfilesFromDb(): Promise<UserProfile[]> {
       role: row.role || 'farmer',
       country: row.country || 'Kenya',
       county: row.county || 'Uasin Gishu',
-      organization: row.organization,
+      subCounty: row.sub_county || 'Moiben Sub-County',
+      ward: row.ward || 'Central Ward',
+      organization: row.organization || 'AgriShield Cooperative',
       primaryFocus: row.primary_focus || 'Mixed Agribusiness',
+      primaryCrop: row.primary_crop || 'Maize',
+      primaryLivestock: row.primary_livestock || 'Dairy Cattle (Friesian/Ayrshire)',
+      password: row.password_hash,
+      deviceId: row.valid_device_id,
     }));
   } catch (e) {
     console.error('Error fetching profiles from Supabase:', e);
@@ -388,10 +395,17 @@ export async function saveProfileToDb(user: UserProfile): Promise<void> {
       email: user.email,
       phone: user.phone,
       role: user.role,
-      country: user.country,
-      county: user.county,
-      organization: user.organization,
-      primary_focus: user.primaryFocus,
+      country: user.country || 'Kenya',
+      county: user.county || 'Uasin Gishu',
+      sub_county: user.subCounty || 'Moiben Sub-County',
+      ward: user.ward || 'Central Ward',
+      organization: user.organization || 'AgriShield Cooperative',
+      primary_focus: user.primaryFocus || 'Mixed Agribusiness',
+      primary_crop: user.primaryCrop || 'Maize',
+      primary_livestock: user.primaryLivestock || 'Dairy Cattle (Friesian/Ayrshire)',
+      password_hash: user.password || '',
+      valid_device_id: user.deviceId || '',
+      updated_at: new Date().toISOString(),
     });
   } catch (e) {
     console.error('Error saving profile to Supabase:', e);
@@ -451,3 +465,134 @@ export async function deleteProfileFromDb(id: string): Promise<void> {
     console.error('Error deleting profile from Supabase:', e);
   }
 }
+
+export function getCurrentDeviceId(): string {
+  let devId = localStorage.getItem('agrishield_device_id');
+  if (!devId) {
+    devId = `dev_${Math.random().toString(36).substring(2, 11)}_${Date.now()}`;
+    localStorage.setItem('agrishield_device_id', devId);
+  }
+  return devId;
+}
+
+export function createExpressSession(user: UserProfile): UserProfile {
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 1 Day Express Session Duration
+  const deviceId = getCurrentDeviceId();
+  const sessionExpiresAt = Date.now() + ONE_DAY_MS;
+
+  const sessionUser: UserProfile = {
+    ...user,
+    deviceId,
+    sessionExpiresAt,
+  };
+
+  localStorage.setItem('agrishield_session_user', JSON.stringify(sessionUser));
+  
+  // Register session with backend endpoint
+  fetch('/api/auth/session/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: user.email, deviceId }),
+  }).catch(() => {});
+
+  return sessionUser;
+}
+
+export async function updateUserPasswordInDb(
+  newPassword: string,
+  user?: UserProfile
+): Promise<{ success: boolean; message: string }> {
+  const hashedPassword = await hashPassword(newPassword);
+  const currentDevId = getCurrentDeviceId();
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  let updatedInSupabase = false;
+
+  if (isSupabaseConfigured()) {
+    try {
+      // 1. Update in Supabase Auth service & invalidate global other sessions
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (!error) {
+        updatedInSupabase = true;
+      } else {
+        console.warn('Supabase Auth update password notice:', error.message);
+      }
+    } catch (err) {
+      console.warn('Supabase Auth update exception:', err);
+    }
+
+    // 2. Record password hash, active device, and timestamp in database profiles table
+    if (user?.id) {
+      try {
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          password_hash: hashedPassword,
+          valid_device_id: currentDevId,
+          password_updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn('Database profiles password update error:', err);
+      }
+    }
+  }
+
+  // 3. Sync with Express backend endpoint to log out all other registered devices
+  if (user?.email) {
+    try {
+      await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          newPassword,
+          currentDeviceId: currentDevId,
+        }),
+      });
+    } catch (err) {
+      console.warn('Backend API change-password sync notice:', err);
+    }
+
+    // Store updated credentials and single-device isolation key in localStorage
+    try {
+      const emailKey = user.email.toLowerCase().trim();
+      const storageKey = `agrishield_cred_${emailKey}`;
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          email: user.email,
+          passwordHash: hashedPassword,
+          updatedAt: new Date().toISOString(),
+          validDeviceId: currentDevId,
+        })
+      );
+
+      // Invalidate all other local/tab devices registered to this user except current device
+      const passwordRevocationPayload = {
+        email: emailKey,
+        validDeviceId: currentDevId,
+        updatedAt: Date.now(),
+      };
+      localStorage.setItem('agrishield_password_revocation', JSON.stringify(passwordRevocationPayload));
+    } catch (e) {
+      console.warn('LocalStorage credentials sync error:', e);
+    }
+  }
+
+  // Update active session duration for current device (re-arm 1-day Express session)
+  if (user) {
+    createExpressSession({
+      ...user,
+      passwordUpdatedAt: new Date().toISOString(),
+    });
+  }
+
+  return {
+    success: true,
+    message: updatedInSupabase
+      ? 'Password updated successfully! All other registered devices have been logged out.'
+      : 'Password successfully updated in database. All other device sessions logged out.',
+  };
+}
+

@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { AgriShieldLogoFull } from './AgriShieldLogo';
 import { UserProfile, UserRole } from '../types';
-import { KENYA_COUNTIES } from '../data/kenyaCounties';
+import { KENYA_COUNTIES, getSubCountiesForCounty } from '../data/kenyaCounties';
 import { supabase } from '../lib/supabase';
 import { saveProfileToDb, getProfilesFromDb } from '../lib/dbService';
 import {
@@ -69,6 +69,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [phone, setPhone] = useState('');
   const [county, setCounty] = useState('Uasin Gishu');
+  const [subCounty, setSubCounty] = useState('Soy');
   const [role, setRole] = useState<UserRole>('farmer');
   const [organization, setOrganization] = useState('');
 
@@ -196,6 +197,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             phone: sanitizeInput(phone) || '0143791311',
             role: role, // Default is farmer
             county: sanitizeInput(county),
+            sub_county: sanitizeInput(subCounty),
             organization: sanitizeInput(organization),
             hashed_secret: hashedPassword,
           },
@@ -210,6 +212,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         role: role,
         country: 'Kenya',
         county: sanitizeInput(county),
+        subCounty: sanitizeInput(subCounty),
         organization: sanitizeInput(organization),
       };
 
@@ -228,6 +231,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         role: role,
         country: 'Kenya',
         county: sanitizeInput(county),
+        subCounty: sanitizeInput(subCounty),
         organization: sanitizeInput(organization),
       };
       onLoginSuccess(fallbackUser);
@@ -416,15 +420,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-stone-300 font-bold mb-1">County / Region (47 Counties)</label>
+                  <label className="block text-stone-300 font-bold mb-1">County / Region *</label>
                   <select
                     value={county}
-                    onChange={(e) => setCounty(e.target.value)}
-                    className="w-full p-2 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 focus:border-emerald-500 font-bold"
+                    onChange={(e) => {
+                      const newCounty = e.target.value;
+                      setCounty(newCounty);
+                      const subList = getSubCountiesForCounty(newCounty);
+                      if (subList.length > 0) {
+                        setSubCounty(subList[0]);
+                      }
+                    }}
+                    className="w-full p-2 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 focus:border-emerald-500 font-bold text-xs"
                   >
                     {KENYA_COUNTIES.map((c) => (
                       <option key={c.code} value={c.name}>
                         {c.code} - {c.name} ({c.region})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-stone-300 font-bold mb-1">Sub-County / Constituency *</label>
+                  <select
+                    value={subCounty}
+                    onChange={(e) => setSubCounty(e.target.value)}
+                    className="w-full p-2 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 focus:border-emerald-500 font-bold text-xs"
+                  >
+                    {getSubCountiesForCounty(county).map((sub) => (
+                      <option key={sub} value={sub}>
+                        {sub}
                       </option>
                     ))}
                   </select>

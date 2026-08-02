@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Farm, CropType, SoilType, IrrigationMethod, GrowthStage } from '../types';
 import { Sprout, MapPin, X, Check, ShieldCheck, Plus } from 'lucide-react';
-import { KENYA_COUNTIES } from '../data/kenyaCounties';
+import { KENYA_COUNTIES, getSubCountiesForCounty } from '../data/kenyaCounties';
 
 interface NewFarmModalProps {
   isOpen: boolean;
@@ -108,25 +108,37 @@ export const NewFarmModal: React.FC<NewFarmModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-stone-300 font-bold mb-1">Sub-County / Village</label>
-              <input
-                type="text"
-                value={locationName}
-                onChange={(e) => setLocationName(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100"
-              />
-            </div>
-
-            <div>
-              <label className="block text-stone-300 font-bold mb-1">Kenya County (47 Counties)</label>
+              <label className="block text-stone-300 font-bold mb-1">Kenya County (47 Counties) *</label>
               <select
                 value={county}
-                onChange={(e) => setCounty(e.target.value)}
+                onChange={(e) => {
+                  const newCounty = e.target.value;
+                  setCounty(newCounty);
+                  const subList = getSubCountiesForCounty(newCounty);
+                  if (subList.length > 0) {
+                    setLocationName(subList[0]);
+                  }
+                }}
                 className="w-full p-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 focus:border-emerald-500 font-bold"
               >
                 {KENYA_COUNTIES.map((c) => (
                   <option key={c.code} value={c.name}>
                     {c.code} - {c.name} ({c.region})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-stone-300 font-bold mb-1">Sub-County / Constituency *</label>
+              <select
+                value={locationName}
+                onChange={(e) => setLocationName(e.target.value)}
+                className="w-full p-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 focus:border-emerald-500 font-bold"
+              >
+                {getSubCountiesForCounty(county).map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
                   </option>
                 ))}
               </select>

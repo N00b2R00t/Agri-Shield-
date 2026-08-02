@@ -32,7 +32,8 @@ import {
   Server,
   Activity,
 } from 'lucide-react';
-import { KENYA_COUNTIES } from '../data/kenyaCounties';
+import { KENYA_COUNTIES, getSubCountiesForCounty } from '../data/kenyaCounties';
+import { updateUserPasswordInDb } from '../lib/dbService';
 
 export type ThemeMode = 'dark' | 'light' | 'system';
 
@@ -69,6 +70,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [phone, setPhone] = useState(user.phone || '+254712345678');
   const [organization, setOrganization] = useState(user.organization || 'AgriShield Cooperative');
   const [county, setCounty] = useState(user.county || 'Uasin Gishu');
+  const [subCounty, setSubCounty] = useState(
+    user.subCounty || (getSubCountiesForCounty(user.county || 'Uasin Gishu')[0] || 'Moiben')
+  );
   const [profileSavedMsg, setProfileSavedMsg] = useState('');
 
   // Password Change Form State
@@ -78,6 +82,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [showPasswords, setShowPasswords] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   // Account Deactivation/Deletion State
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -108,6 +113,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         phone,
         organization,
         county,
+        subCounty,
       });
     }
     setProfileSavedMsg('Profile details updated and saved successfully!');
@@ -115,7 +121,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   // Handle Change Password
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError('');
     setPasswordSuccess('');
@@ -133,11 +139,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       return;
     }
 
-    setPasswordSuccess('Password successfully updated and encrypted in AgriShield DB!');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-    setTimeout(() => setPasswordSuccess(''), 4000);
+    setIsSavingPassword(true);
+    try {
+      const res = await updateUserPasswordInDb(newPassword, user);
+      setPasswordSuccess(res.message);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => setPasswordSuccess(''), 5000);
+    } catch (err: any) {
+      setPasswordError(err?.message || 'Failed to update password in database.');
+    } finally {
+      setIsSavingPassword(false);
+    }
   };
 
   // Handle Account Deactivation / Deletion
@@ -332,22 +346,49 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-stone-400 mb-1 font-semibold flex items-center space-x-1">
-                        <MapPin className="w-3.5 h-3.5 text-stone-500" />
-                        <span>County Region</span>
-                      </label>
-                      <select
-                        value={county}
-                        onChange={(e) => setCounty(e.target.value)}
-                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-emerald-500 focus:outline-none"
-                      >
-                        {KENYA_COUNTIES.map((c) => (
-                          <option key={c.name} value={c.name}>
-                            {c.name} ({c.region})
-                          </option>
-                        ))}
-                      </select>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-stone-400 mb-1 font-semibold flex items-center space-x-1">
+                          <MapPin className="w-3.5 h-3.5 text-stone-500" />
+                          <span>County Region</span>
+                        </label>
+                        <select
+                          value={county}
+                          onChange={(e) => {
+                            const newCounty = e.target.value;
+                            setCounty(newCounty);
+                            const subList = getSubCountiesForCounty(newCounty);
+                            if (subList.length > 0) {
+                              setSubCounty(subList[0]);
+                            }
+                          }}
+                          className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-emerald-500 focus:outline-none"
+                        >
+                          {KENYA_COUNTIES.map((c) => (
+                            <option key={c.name} value={c.name}>
+                              {c.name} ({c.region})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-stone-400 mb-1 font-semibold flex items-center space-x-1">
+                          <MapPin className="w-3.5 h-3.5 text-stone-500" />
+                          <span>Sub-County / Constituency</span>
+                        </label>
+                        <select
+                          value={subCounty}
+                          onChange={(e) => setSubCounty(e.target.value)}
+                          className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 font-medium focus:border-emerald-500 focus:outline-none"
+                        >
+                          {getSubCountiesForCounty(county).map((sub) => (
+                            <option key={sub} value={sub}>
+                              {sub}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
                     <div>
@@ -487,10 +528,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="pt-2 flex justify-end">
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-stone-950 font-black rounded-xl transition-colors shadow-sm flex items-center space-x-1.5"
+                      disabled={isSavingPassword}
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-stone-950 font-black rounded-xl transition-colors shadow-sm flex items-center space-x-1.5"
                     >
-                      <Lock className="w-4 h-4" />
-                      <span>Update Password</span>
+                      {isSavingPassword ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Updating password...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-4 h-4" />
+                          <span>Update password</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>

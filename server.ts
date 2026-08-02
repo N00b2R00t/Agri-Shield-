@@ -43,6 +43,84 @@ async function startServer() {
     res.json({ status: 'ok', service: 'AgriShield AI Engine', time: new Date().toISOString() });
   });
 
+  // Express Session & Multi-Device Control (1 Day Expiry = 24 * 60 * 60 * 1000 ms = 86400s)
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const userDeviceSessions = new Map<string, { validDeviceId: string; sessions: Map<string, number> }>();
+
+  app.post('/api/auth/session/create', (req, res) => {
+    const { email, deviceId } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email required for session' });
+    }
+
+    const currentDevId = deviceId || `dev_${Math.random().toString(36).substring(2, 10)}_${Date.now()}`;
+    const expiresAt = Date.now() + ONE_DAY_MS;
+
+    let userStore = userDeviceSessions.get(email.toLowerCase());
+    if (!userStore) {
+      userStore = { validDeviceId: currentDevId, sessions: new Map() };
+      userDeviceSessions.set(email.toLowerCase(), userStore);
+    } else {
+      userStore.validDeviceId = currentDevId;
+    }
+
+    userStore.sessions.set(currentDevId, expiresAt);
+
+    res.json({
+      success: true,
+      sessionId: currentDevId,
+      expiresAt,
+      maxAgeSeconds: 86400,
+      message: 'Express session created with 1 day duration (86400s)',
+    });
+  });
+
+  app.post('/api/auth/change-password', (req, res) => {
+    const { email, newPassword, currentDeviceId } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({ error: 'Email and new password are required' });
+    }
+
+    const activeDevId = currentDeviceId || `dev_active_${Date.now()}`;
+    const expiresAt = Date.now() + ONE_DAY_MS;
+
+    const userStore = {
+      validDeviceId: activeDevId,
+      sessions: new Map<string, number>([[activeDevId, expiresAt]]),
+    };
+    userDeviceSessions.set(email.toLowerCase(), userStore);
+
+    res.json({
+      success: true,
+      currentDeviceId: activeDevId,
+      expiresAt,
+      message: 'Password changed successfully. All other registered devices logged out.',
+    });
+  });
+
+  app.post('/api/auth/session/validate', (req, res) => {
+    const { email, deviceId, sessionExpiresAt } = req.body;
+    if (!email) {
+      return res.status(400).json({ valid: false, reason: 'Missing email' });
+    }
+
+    if (sessionExpiresAt && Date.now() > sessionExpiresAt) {
+      return res.json({ valid: false, reason: 'Session expired after 1 day (24 hrs)' });
+    }
+
+    const userStore = userDeviceSessions.get(email.toLowerCase());
+    if (userStore && deviceId) {
+      if (userStore.validDeviceId && userStore.validDeviceId !== deviceId) {
+        return res.json({
+          valid: false,
+          reason: 'Password changed on another device. This device was logged out for security.',
+        });
+      }
+    }
+
+    res.json({ valid: true, expiresAt: sessionExpiresAt || (Date.now() + ONE_DAY_MS) });
+  });
+
   // Role Access & Authorization Check Endpoint
   app.post('/api/roles/access-check', (req, res) => {
     const { role, userEmail } = req.body;

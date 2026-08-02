@@ -43,6 +43,8 @@ import {
   deleteRecommendationFromDb,
   deletePredictionFromDb,
   deleteMarketPriceFromDb,
+  createExpressSession,
+  getCurrentDeviceId,
 } from './lib/dbService';
 
 // Role Views Import
@@ -122,6 +124,7 @@ import {
   BarChart3,
   Lock,
   Database,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function App() {
@@ -193,6 +196,54 @@ export default function App() {
     return (saved as ThemeMode) || 'system';
   });
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [sessionNotice, setSessionNotice] = useState<string>('');
+
+  // 1-Day Express Session Expiry (24 Hrs = 86400s) & Device Password Revocation Sync
+  useEffect(() => {
+    function verifySessionAndRevocation() {
+      const savedSession = localStorage.getItem('agrishield_session_user');
+      if (savedSession) {
+        try {
+          const parsed = JSON.parse(savedSession);
+
+          // 1. Check 1-Day Express Session Expiry
+          if (parsed.sessionExpiresAt && Date.now() > parsed.sessionExpiresAt) {
+            localStorage.removeItem('agrishield_session_user');
+            setIsAuthenticated(false);
+            setSessionNotice('Your 1-Day Express Session has expired. Please sign in again.');
+            return;
+          }
+
+          // 2. Check Password Change Revocation for Other Registered Devices
+          const revocationStr = localStorage.getItem('agrishield_password_revocation');
+          if (revocationStr && parsed.email) {
+            const revocation = JSON.parse(revocationStr);
+            if (revocation.email && revocation.email.toLowerCase() === parsed.email.toLowerCase()) {
+              const currentDevId = getCurrentDeviceId();
+              if (revocation.validDeviceId && revocation.validDeviceId !== currentDevId) {
+                localStorage.removeItem('agrishield_session_user');
+                setIsAuthenticated(false);
+                setSessionNotice(
+                  'Your account password was updated from another device. All other active sessions were logged out for security.'
+                );
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Session verification exception:', e);
+        }
+      }
+    }
+
+    verifySessionAndRevocation();
+    const interval = setInterval(verifySessionAndRevocation, 3000);
+    window.addEventListener('storage', verifySessionAndRevocation);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', verifySessionAndRevocation);
+    };
+  }, []);
 
   // Apply Theme Effect
   useEffect(() => {
@@ -308,21 +359,22 @@ export default function App() {
 
   // User Management & Authentication Handlers
   const handleLoginSuccess = async (loggedInUser: UserProfile) => {
-    setUser(loggedInUser);
+    const sessionUser = createExpressSession(loggedInUser);
+    setUser(sessionUser);
     setIsAuthenticated(true);
     setShowAuthModal(false);
-    localStorage.setItem('agrishield_session_user', JSON.stringify(loggedInUser));
+    setSessionNotice('');
 
     // Ensure user is in list
     setUsersList((prev) => {
-      const exists = prev.some((u) => u.id === loggedInUser.id || u.email === loggedInUser.email);
-      if (!exists) return [loggedInUser, ...prev];
-      return prev.map((u) => (u.email === loggedInUser.email ? loggedInUser : u));
+      const exists = prev.some((u) => u.id === sessionUser.id || u.email === sessionUser.email);
+      if (!exists) return [sessionUser, ...prev];
+      return prev.map((u) => (u.email === sessionUser.email ? sessionUser : u));
     });
 
     setActiveTab('dashboard');
 
-    await saveProfileToDb(loggedInUser);
+    await saveProfileToDb(sessionUser);
   };
 
   const handleAddUser = async (newUser: UserProfile) => {
@@ -583,6 +635,20 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <ErrorBoundary>
+        {sessionNotice && (
+          <div className="max-w-md mx-auto my-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs font-bold flex items-center justify-between shadow-sm">
+            <div className="flex items-center space-x-2">
+              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>{sessionNotice}</span>
+            </div>
+            <button
+              onClick={() => setSessionNotice('')}
+              className="text-amber-700 hover:text-amber-950 p-1 font-black"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <LandingPage
           onOpenLogin={() => {
             setAuthInitialMode('login');

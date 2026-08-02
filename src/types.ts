@@ -8,8 +8,16 @@ export interface UserProfile {
   role: UserRole;
   country: string;
   county: string;
+  subCounty?: string;
+  ward?: string;
   organization?: string;
   primaryFocus?: 'Crops' | 'Livestock' | 'Mixed Agribusiness';
+  primaryCrop?: string;
+  primaryLivestock?: string;
+  password?: string;
+  passwordUpdatedAt?: string;
+  deviceId?: string;
+  sessionExpiresAt?: number;
 }
 
 export type AssetCategory = 'crop' | 'livestock' | 'mixed';

@@ -18,6 +18,8 @@ export interface UserProfile {
   passwordUpdatedAt?: string;
   deviceId?: string;
   sessionExpiresAt?: number;
+  status?: 'active' | 'suspended';
+  reportedCount?: number;
 }
 
 export type AssetCategory = 'crop' | 'livestock' | 'mixed';
@@ -86,6 +88,7 @@ export interface Farm {
   thiIndex?: number; // Temperature Humidity Index (THI > 72 indicates heat stress)
   waterRequirementLitersPerDay?: number;
   forageAvailabilityPercent?: number;
+  flaggedFake?: boolean;
 }
 
 export interface DayForecast {
@@ -181,6 +184,7 @@ export interface CommunityReport {
   verified: boolean;
   upvotes: number;
   distanceKm?: number;
+  flaggedFake?: boolean;
 }
 
 export interface DiseaseRiskPrediction {
@@ -196,6 +200,7 @@ export interface DiseaseRiskPrediction {
   mitigationStrategy: string;
   predictedArea: string;
   outbreakProbabilityNext7Days: number; // %
+  flaggedFake?: boolean;
 }
 
 export interface WhatIfInput {
@@ -254,6 +259,7 @@ export interface AlertNotification {
   timestamp: string;
   read: boolean;
   actionUrl?: string;
+  targetRole?: 'all' | 'farmer' | 'extension_officer' | 'ngo' | 'admin';
 }
 
 export interface ChatMessage {
@@ -262,4 +268,19 @@ export interface ChatMessage {
   text: string;
   timestamp: string;
   quickActions?: string[];
+}
+
+export interface UserReportItem {
+  id: string;
+  reportedByUserId: string;
+  reportedByUserName: string;
+  targetUserId: string;
+  targetUserName: string;
+  targetItemType: 'user' | 'outbreak' | 'community_report' | 'farm' | 'market_price';
+  targetItemId?: string;
+  targetItemTitle?: string;
+  reason: 'fake_outbreak' | 'fake_incident' | 'false_prices' | 'fake_farm' | 'misleading_advice' | 'misconduct';
+  details: string;
+  createdAt: string;
+  status: 'pending' | 'actioned' | 'dismissed';
 }

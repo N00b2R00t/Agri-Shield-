@@ -2,7 +2,13 @@ import React, { useState } from 'react';
 import { Radio, Send, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface BroadcastDispatcherProps {
-  onSendNotification?: (notif: { title: string; message: string; severity: 'info' | 'warning' | 'critical'; type: any }) => void;
+  onSendNotification?: (notif: {
+    title: string;
+    message: string;
+    severity: 'info' | 'warning' | 'critical';
+    type: any;
+    targetRole?: 'all' | 'farmer' | 'extension_officer' | 'ngo' | 'admin';
+  }) => void;
 }
 
 export const BroadcastDispatcher: React.FC<BroadcastDispatcherProps> = ({ onSendNotification }) => {
@@ -10,6 +16,7 @@ export const BroadcastDispatcher: React.FC<BroadcastDispatcherProps> = ({ onSend
   const [message, setMessage] = useState('');
   const [severity, setSeverity] = useState<'info' | 'warning' | 'critical'>('warning');
   const [alertType, setAlertType] = useState<'flood' | 'heatwave' | 'pest' | 'disease' | 'weather_warning'>('pest');
+  const [targetRole, setTargetRole] = useState<'all' | 'farmer' | 'extension_officer' | 'ngo' | 'admin'>('all');
   const [sentSuccess, setSentSuccess] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -22,6 +29,7 @@ export const BroadcastDispatcher: React.FC<BroadcastDispatcherProps> = ({ onSend
         message,
         severity,
         type: alertType,
+        targetRole,
       });
     }
 
@@ -50,7 +58,22 @@ export const BroadcastDispatcher: React.FC<BroadcastDispatcherProps> = ({ onSend
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-stone-300 mb-1">Target Audience / Role</label>
+            <select
+              value={targetRole}
+              onChange={(e) => setTargetRole(e.target.value as any)}
+              className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-amber-300 font-bold focus:ring-2 focus:ring-cyan-500"
+            >
+              <option value="all">🌐 All Roles & Community Members</option>
+              <option value="farmer">🌾 Smallholder Farmers Only</option>
+              <option value="extension_officer">🏛️ Extension Officers Only</option>
+              <option value="ngo">🔬 Researchers & NGOs Only</option>
+              <option value="admin">🔑 System Administrators Only</option>
+            </select>
+          </div>
+
           <div>
             <label className="block text-xs font-bold text-stone-300 mb-1">Alert Category</label>
             <select

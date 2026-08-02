@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DiseaseRiskPrediction, CommunityReport } from '../../types';
-import { Bug, AlertTriangle, Plus, Trash2, Send, CheckCircle2, ShieldCheck, X } from 'lucide-react';
+import { Bug, AlertTriangle, Plus, Trash2, Send, CheckCircle2, ShieldCheck, X, Flag } from 'lucide-react';
 
 interface PestOutbreakRadarProps {
   predictions: DiseaseRiskPrediction[];
@@ -8,6 +8,13 @@ interface PestOutbreakRadarProps {
   onAddPrediction?: (pred: DiseaseRiskPrediction) => void;
   onSendNotification?: (notif: { title: string; message: string; severity: 'info' | 'warning' | 'critical'; type: any }) => void;
   onDeletePrediction?: (id: string) => void;
+  onOpenReportModal?: (target: {
+    targetUserId: string;
+    targetUserName: string;
+    targetItemType: 'community_report' | 'outbreak' | 'user';
+    targetItemId?: string;
+    targetItemTitle?: string;
+  }) => void;
 }
 
 export const PestOutbreakRadar: React.FC<PestOutbreakRadarProps> = ({
@@ -16,6 +23,7 @@ export const PestOutbreakRadar: React.FC<PestOutbreakRadarProps> = ({
   onAddPrediction,
   onSendNotification,
   onDeletePrediction,
+  onOpenReportModal,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [diseaseName, setDiseaseName] = useState('');
@@ -117,6 +125,25 @@ export const PestOutbreakRadar: React.FC<PestOutbreakRadarProps> = ({
                 >
                   {p.riskLevel} ({p.riskScore}%)
                 </span>
+
+                {onOpenReportModal && (
+                  <button
+                    onClick={() =>
+                      onOpenReportModal({
+                        targetUserId: 'publisher-unknown',
+                        targetUserName: 'Outbreak Publisher',
+                        targetItemType: 'outbreak',
+                        targetItemId: p.id,
+                        targetItemTitle: `${p.diseaseName} (${p.cropTarget})`,
+                      })
+                    }
+                    className="p-1.5 rounded-lg bg-red-950/80 text-red-300 hover:bg-red-900 border border-red-800 text-[10px] font-bold flex items-center space-x-1"
+                    title="Report Fake Outbreak to System Admin"
+                  >
+                    <Flag className="w-3.5 h-3.5 text-red-400" />
+                    <span>Report Fake</span>
+                  </button>
+                )}
 
                 {onDeletePrediction && (
                   <button

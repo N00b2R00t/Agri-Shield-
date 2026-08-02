@@ -7,6 +7,8 @@ interface SharedGlobalNavbarProps {
   activeTab: string;
   setActiveTab: (tab: any) => void;
   notifications: AlertNotification[];
+  onMarkNotificationRead?: (id: string) => void;
+  onMarkAllNotificationsRead?: () => void;
   farms: Farm[];
   activeFarm: Farm | null;
   setActiveFarm: (farm: Farm | null) => void;

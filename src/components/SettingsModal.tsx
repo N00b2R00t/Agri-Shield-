@@ -47,7 +47,7 @@ interface SettingsModalProps {
   onUpdateUser?: (updated: Partial<UserProfile>) => void;
   usersList?: UserProfile[];
   onUpdateUsersList?: (users: UserProfile[]) => void;
-  onSendSystemBroadcast?: (title: string, message: string, severity: 'info' | 'warning' | 'critical') => void;
+  onSendSystemBroadcast?: (title: string, message: string, severity: 'info' | 'warning' | 'critical', type?: string, targetRole?: 'all' | 'farmer' | 'extension_officer' | 'ngo' | 'admin') => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -96,6 +96,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [broadcastTitle, setBroadcastTitle] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcastSeverity, setBroadcastSeverity] = useState<'info' | 'warning' | 'critical'>('warning');
+  const [broadcastTargetRole, setBroadcastTargetRole] = useState<'all' | 'farmer' | 'extension_officer' | 'ngo' | 'admin'>('all');
   const [broadcastSuccess, setBroadcastSuccess] = useState('');
   const [aiConfidenceThreshold, setAiConfidenceThreshold] = useState(85);
   const [strictAgronomistRules, setStrictAgronomistRules] = useState(true);
@@ -175,9 +176,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (!broadcastTitle.trim() || !broadcastMessage.trim()) return;
 
     if (onSendSystemBroadcast) {
-      onSendSystemBroadcast(broadcastTitle, broadcastMessage, broadcastSeverity);
+      onSendSystemBroadcast(broadcastTitle, broadcastMessage, broadcastSeverity, 'weather_warning', broadcastTargetRole);
     }
-    setBroadcastSuccess('System-wide emergency alert broadcasted to registered users!');
+    setBroadcastSuccess('Targeted emergency alert broadcasted successfully!');
     setBroadcastTitle('');
     setBroadcastMessage('');
     setTimeout(() => setBroadcastSuccess(''), 4000);
@@ -618,7 +619,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 )}
 
                 <form onSubmit={handleSendBroadcast} className="space-y-3 pt-1">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <div className="sm:col-span-2">
                       <label className="block text-stone-400 mb-1 font-semibold">Alert Title / Subject</label>
                       <input
@@ -629,6 +630,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         required
                         className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-100 focus:border-emerald-500 focus:outline-none"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 mb-1 font-semibold">Target Role</label>
+                      <select
+                        value={broadcastTargetRole}
+                        onChange={(e) => setBroadcastTargetRole(e.target.value as any)}
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-amber-300 font-bold focus:border-emerald-500 focus:outline-none"
+                      >
+                        <option value="all">All Roles</option>
+                        <option value="farmer">Farmers Only</option>
+                        <option value="extension_officer">Officers Only</option>
+                        <option value="ngo">NGOs Only</option>
+                        <option value="admin">Admins Only</option>
+                      </select>
                     </div>
 
                     <div>

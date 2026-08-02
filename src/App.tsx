@@ -9,7 +9,9 @@ import {
   MarketPrice,
   AlertNotification,
   UserRole,
+  UserReportItem,
 } from './types';
+import { ReportFakeModal } from './components/ReportFakeModal';
 import {
   INITIAL_USER,
   INITIAL_USERS,
@@ -182,6 +184,29 @@ export default function App() {
   const [predictions, setPredictions] = useState<DiseaseRiskPrediction[]>(INITIAL_DISEASE_PREDICTIONS);
   const [markets, setMarkets] = useState<MarketPrice[]>(INITIAL_MARKET_PRICES);
   const [notifications, setNotifications] = useState<AlertNotification[]>(INITIAL_NOTIFICATIONS);
+  const [userReports, setUserReports] = useState<UserReportItem[]>([
+    {
+      id: 'rep-usr-101',
+      reportedByUserId: 'usr-002',
+      reportedByUserName: 'Officer Mwangi',
+      targetUserId: 'usr-999',
+      targetUserName: 'Suspicious Poster',
+      targetItemType: 'outbreak',
+      targetItemId: 'pred-999',
+      targetItemTitle: 'Unverified Armyworm Warning',
+      reason: 'fake_outbreak',
+      details: 'User published an unverified critical armyworm outbreak claiming 90% crop loss in Moiben without photos or officer verification.',
+      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      status: 'pending',
+    },
+  ]);
+  const [reportModalData, setReportModalData] = useState<{
+    targetUserId: string;
+    targetUserName: string;
+    targetItemType: 'user' | 'outbreak' | 'community_report' | 'farm' | 'market_price';
+    targetItemId?: string;
+    targetItemTitle?: string;
+  } | null>(null);
 
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'recommendations' | 'map' | 'community' | 'risk_prediction' | 'whatif' | 'markets' | 'admin'
@@ -575,12 +600,65 @@ export default function App() {
     setUsersList((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
   };
 
+  // Moderation & Suspension Handlers
+  const handleToggleUserSuspend = (userId: string) => {
+    setUsersList((prev) =>
+      prev.map((u) => {
+        if (u.id === userId) {
+          const nextStatus = u.status === 'suspended' ? 'active' : 'suspended';
+          const updated = { ...u, status: nextStatus as 'active' | 'suspended' };
+          saveProfileToDb(updated);
+          return updated;
+        }
+        return u;
+      })
+    );
+    if (user.id === userId) {
+      const nextStatus = user.status === 'suspended' ? 'active' : 'suspended';
+      const updated = { ...user, status: nextStatus as 'active' | 'suspended' };
+      setUser(updated);
+      localStorage.setItem('agrishield_session_user', JSON.stringify(updated));
+    }
+  };
+
+  const handleAddUserReport = (reportItem: UserReportItem) => {
+    setUserReports((prev) => [reportItem, ...prev]);
+    const newNotif: AlertNotification = {
+      id: `notif-report-${Date.now()}`,
+      title: `Fake Info Complaint: ${reportItem.targetUserName}`,
+      type: 'disease',
+      severity: 'warning',
+      message: `${reportItem.reportedByUserName} filed a report against ${reportItem.targetUserName} for ${reportItem.reason.replace('_', ' ')}.`,
+      timestamp: new Date().toISOString(),
+      read: false,
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
+  };
+
+  const handleResolveUserReport = (reportId: string, status: 'actioned' | 'dismissed') => {
+    setUserReports((prev) =>
+      prev.map((r) => (r.id === reportId ? { ...r, status } : r))
+    );
+  };
+
+  // Notification Mark-Read Handlers
+  const handleMarkNotificationRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const handleMarkAllNotificationsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
   // Broadcast Outbreak & Emergency Alert from Officer/Admin & persist across system
   const handleSendBroadcast = async (
     title: string,
     message: string,
     severity: 'info' | 'warning' | 'critical' = 'critical',
-    type: string = 'pest'
+    type: string = 'pest',
+    targetRole: 'all' | 'farmer' | 'extension_officer' | 'ngo' | 'admin' = 'all'
   ) => {
     // 1. In-app & Push Alert Notification
     const newNotif: AlertNotification = {
@@ -591,6 +669,7 @@ export default function App() {
       message,
       timestamp: new Date().toISOString(),
       read: false,
+      targetRole: targetRole || 'all',
     };
     setNotifications((prev) => [newNotif, ...prev]);
     await addNotificationToDb(newNotif);
@@ -768,7 +847,11 @@ export default function App() {
           onOpenProfileModal={() => setShowProfileModal(true)}
           onOpenAuthModal={() => setShowAuthModal(true)}
           onSignOut={handleSignOut}
-          notifications={notifications}
+          notifications={notifications.filter(
+            (n) => !n.targetRole || n.targetRole === 'all' || n.targetRole === user.role
+          )}
+          onMarkNotificationRead={handleMarkNotificationRead}
+          onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
           onOpenAssistant={() => setShowAssistant(true)}
           activeTab={activeTab}
           onSelectTab={(tabId) => setActiveTab(tabId as any)}
@@ -862,8 +945,10 @@ export default function App() {
             {activeTab === 'risk_alerts' && (
               <RiskAlerts
                 predictions={predictions}
-                reports={reports}
-                onDeletePrediction={handleDeletePrediction}
+                notifications={notifications.filter(
+                  (n) => !n.targetRole || n.targetRole === 'all' || n.targetRole === user.role
+                )}
+                onMarkNotificationRead={handleMarkNotificationRead}
               />
             )}
             {activeTab === 'community' && (
@@ -874,6 +959,7 @@ export default function App() {
                 onUpvoteReport={handleUpvoteReport}
                 onVerifyReport={handleVerifyReport}
                 onDeleteReport={handleDeleteReport}
+                onOpenReportModal={(data) => setReportModalData(data)}
               />
             )}
             {activeTab === 'markets' && (
@@ -903,7 +989,7 @@ export default function App() {
                 reports={reports}
                 predictions={predictions}
                 onNavigate={(tab) => setActiveTab(tab as any)}
-                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type)}
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type, notif.targetRole)}
               />
             )}
             {activeTab === 'regional_farms' && (
@@ -911,7 +997,7 @@ export default function App() {
             )}
             {activeTab === 'broadcast' && (
               <BroadcastDispatcher
-                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type)}
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type, notif.targetRole)}
               />
             )}
             {activeTab === 'field_advisory' && (
@@ -928,8 +1014,9 @@ export default function App() {
                 predictions={predictions}
                 reports={reports}
                 onAddPrediction={handleAddPrediction}
-                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type)}
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type, notif.targetRole)}
                 onDeletePrediction={handleDeletePrediction}
+                onOpenReportModal={(data) => setReportModalData(data)}
               />
             )}
             {activeTab === 'simulations' && (
@@ -1014,14 +1101,25 @@ export default function App() {
               <UserManagement
                 user={user}
                 usersList={usersList}
+                farms={farms}
+                reports={reports}
+                predictions={predictions}
+                userReports={userReports}
                 onAddUser={handleAddUser}
                 onUpdateRole={handleUpdateUserRole}
+                onToggleUserSuspend={handleToggleUserSuspend}
                 onDeleteProfile={handleDeleteUser}
+                onDeleteFarm={handleDeleteFarm}
+                onUpdateFarm={handleUpdateFarm}
+                onDeleteReport={handleDeleteReport}
+                onDeletePrediction={handleDeletePrediction}
+                onVerifyReport={handleVerifyReport}
+                onResolveUserReport={handleResolveUserReport}
               />
             )}
             {activeTab === 'broadcast' && (
               <SystemBroadcast
-                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type)}
+                onSendNotification={(notif) => handleSendBroadcast(notif.title, notif.message, notif.severity, notif.type, notif.targetRole)}
               />
             )}
             {activeTab === 'risk' && (
@@ -1116,7 +1214,7 @@ export default function App() {
         onUpdateUser={handleUpdateUser}
         usersList={usersList}
         onUpdateUsersList={setUsersList}
-        onSendSystemBroadcast={(title, message) => handleSendBroadcast(title, message)}
+        onSendSystemBroadcast={(title, message, severity, type, targetRole) => handleSendBroadcast(title, message, severity, type, targetRole)}
       />
 
       <DocumentationModal
@@ -1141,6 +1239,19 @@ export default function App() {
           setShowAssistant(true);
         }}
       />
+
+      {reportModalData && (
+        <ReportFakeModal
+          currentUser={user}
+          targetUserId={reportModalData.targetUserId}
+          targetUserName={reportModalData.targetUserName}
+          targetItemType={reportModalData.targetItemType}
+          targetItemId={reportModalData.targetItemId}
+          targetItemTitle={reportModalData.targetItemTitle}
+          onClose={() => setReportModalData(null)}
+          onSubmitReport={handleAddUserReport}
+        />
+      )}
 
       {/* Footer */}
       <footer className="bg-stone-900 text-stone-400 border-t border-stone-800 py-6 text-xs text-center space-y-2">

@@ -2,7 +2,13 @@ import React from 'react';
 import { BroadcastDispatcher } from '../extension_officer/BroadcastDispatcher';
 
 interface SystemBroadcastProps {
-  onSendNotification?: (notif: { title: string; message: string; severity: 'info' | 'warning' | 'critical'; type: any }) => void;
+  onSendNotification?: (notif: {
+    title: string;
+    message: string;
+    severity: 'info' | 'warning' | 'critical';
+    type: any;
+    targetRole?: 'all' | 'farmer' | 'extension_officer' | 'ngo' | 'admin';
+  }) => void;
 }
 
 export const SystemBroadcast: React.FC<SystemBroadcastProps> = ({ onSendNotification }) => {

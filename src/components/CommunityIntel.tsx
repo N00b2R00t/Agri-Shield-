@@ -12,6 +12,7 @@ import {
   Camera,
   CheckCircle,
   Trash2,
+  Flag,
 } from 'lucide-react';
 
 interface CommunityIntelProps {
@@ -22,6 +23,13 @@ interface CommunityIntelProps {
   isExtensionOfficer: boolean;
   onRequestOpenMapWithReport: (report: CommunityReport) => void;
   onDeleteReport?: (id: string) => void;
+  onOpenReportModal?: (target: {
+    targetUserId: string;
+    targetUserName: string;
+    targetItemType: 'community_report' | 'outbreak' | 'user';
+    targetItemId?: string;
+    targetItemTitle?: string;
+  }) => void;
 }
 
 export const CommunityIntel: React.FC<CommunityIntelProps> = ({
@@ -32,6 +40,7 @@ export const CommunityIntel: React.FC<CommunityIntelProps> = ({
   isExtensionOfficer,
   onRequestOpenMapWithReport,
   onDeleteReport,
+  onOpenReportModal,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [filterType, setFilterType] = useState<string>('all');
@@ -219,6 +228,25 @@ export const CommunityIntel: React.FC<CommunityIntelProps> = ({
                   >
                     <CheckCircle className="w-3.5 h-3.5" />
                     <span>Verify</span>
+                  </button>
+                )}
+
+                {onOpenReportModal && (
+                  <button
+                    onClick={() =>
+                      onOpenReportModal({
+                        targetUserId: rep.userId,
+                        targetUserName: rep.userName,
+                        targetItemType: 'community_report',
+                        targetItemId: rep.id,
+                        targetItemTitle: `${rep.cropAffected} ${rep.reportType} report`,
+                      })
+                    }
+                    className="p-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-bold flex items-center space-x-1 border border-red-200 text-[10px]"
+                    title="Report Fake Information to Admin"
+                  >
+                    <Flag className="w-3 h-3" />
+                    <span>Report Fake</span>
                   </button>
                 )}
 

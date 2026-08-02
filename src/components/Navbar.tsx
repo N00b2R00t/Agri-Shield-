@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Settings,
   CheckCircle,
+  CheckCheck,
   AlertTriangle,
   Menu,
   X,
@@ -49,6 +50,8 @@ interface NavbarProps {
   onOpenDocModal?: () => void;
   onSignOut?: () => void;
   notifications: AlertNotification[];
+  onMarkNotificationRead?: (id: string) => void;
+  onMarkAllNotificationsRead?: () => void;
   onOpenAssistant: () => void;
   activeTab: string;
   onSelectTab: (tabId: any) => void;
@@ -70,6 +73,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenDocModal,
   onSignOut,
   notifications,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
   onOpenAssistant,
   activeTab,
   onSelectTab,
@@ -277,35 +282,87 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-72 sm:w-96 bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl p-3.5 sm:p-4 z-50">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl p-3.5 sm:p-4 z-50">
                   <div className="flex items-center justify-between pb-2.5 border-b border-stone-800">
                     <h4 className="text-xs sm:text-sm font-bold text-stone-100 flex items-center space-x-2">
                       <AlertTriangle className="w-4 h-4 text-amber-400" />
                       <span>Live Climate & Vector Alerts</span>
                     </h4>
-                    <span className="text-[10px] font-mono text-stone-400">{notifications.length} Total</span>
+                    <div className="flex items-center space-x-2">
+                      {unreadCount > 0 && onMarkAllNotificationsRead && (
+                        <button
+                          onClick={onMarkAllNotificationsRead}
+                          className="px-2 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 text-[10px] font-bold border border-emerald-700/50 flex items-center space-x-1 transition-colors"
+                          title="Mark all notifications as read"
+                        >
+                          <CheckCheck className="w-3 h-3 text-emerald-400" />
+                          <span>Mark all read</span>
+                        </button>
+                      )}
+                      <span className="text-[10px] font-mono text-stone-400">{notifications.length} Total</span>
+                    </div>
                   </div>
-                  <div className="max-h-72 overflow-y-auto space-y-2 mt-2.5 pr-1">
-                    {notifications.map((n) => (
-                      <div
-                        key={n.id}
-                        className={`p-2.5 rounded-xl border text-xs ${
-                          n.severity === 'critical'
-                            ? 'bg-red-950/40 border-red-800/60 text-red-200'
-                            : n.severity === 'warning'
-                            ? 'bg-amber-950/40 border-amber-800/60 text-amber-200'
-                            : 'bg-stone-800/60 border-stone-700 text-stone-300'
-                        }`}
-                      >
-                        <div className="font-bold flex items-center justify-between mb-1">
-                          <span className="truncate pr-1">{n.title}</span>
-                          <span className="text-[9px] text-stone-400 font-normal shrink-0">
-                            {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <p className="text-[11px] leading-relaxed text-stone-300">{n.message}</p>
-                      </div>
-                    ))}
+                  <div className="max-h-80 overflow-y-auto space-y-2 mt-2.5 pr-1">
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-6 text-stone-500 text-xs">No alerts or notifications</div>
+                    ) : (
+                      notifications.map((n) => {
+                        const isUnread = !n.read;
+                        return (
+                          <div
+                            key={n.id}
+                            className={`p-3 rounded-xl border text-xs transition-all ${
+                              isUnread
+                                ? n.severity === 'critical'
+                                  ? 'bg-red-950/60 border-red-600/80 text-red-100 shadow-sm'
+                                  : n.severity === 'warning'
+                                  ? 'bg-amber-950/60 border-amber-600/80 text-amber-100 shadow-sm'
+                                  : 'bg-stone-800 border-emerald-500/50 text-stone-100'
+                                : 'bg-stone-900/80 border-stone-800 text-stone-400 opacity-80'
+                            }`}
+                          >
+                            <div className="font-bold flex items-center justify-between mb-1">
+                              <div className="flex items-center space-x-1.5 truncate pr-1">
+                                {isUnread && (
+                                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
+                                )}
+                                <span className="truncate">{n.title}</span>
+                              </div>
+                              <span className="text-[9px] text-stone-400 font-normal shrink-0">
+                                {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+
+                            <p className="text-[11px] leading-relaxed mb-2">{n.message}</p>
+
+                            <div className="flex items-center justify-between pt-1 border-t border-stone-800/60 text-[10px]">
+                              {n.targetRole ? (
+                                <span className="px-1.5 py-0.5 rounded bg-stone-800 text-stone-300 font-mono text-[9px]">
+                                  Target: {n.targetRole === 'all' ? 'All Roles' : n.targetRole.replace('_', ' ')}
+                                </span>
+                              ) : (
+                                <span />
+                              )}
+
+                              {isUnread && onMarkNotificationRead ? (
+                                <button
+                                  onClick={() => onMarkNotificationRead(n.id)}
+                                  className="px-2 py-0.5 rounded bg-stone-700 hover:bg-stone-600 text-stone-200 text-[10px] font-bold flex items-center space-x-1 transition-colors ml-auto"
+                                >
+                                  <CheckCircle className="w-3 h-3 text-emerald-400" />
+                                  <span>Mark Read</span>
+                                </button>
+                              ) : (
+                                <span className="text-[9px] text-stone-500 italic flex items-center space-x-1 ml-auto">
+                                  <CheckCheck className="w-3 h-3 text-stone-500" />
+                                  <span>Read</span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               )}

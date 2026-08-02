@@ -43,6 +43,7 @@ import {
   deleteRecommendationFromDb,
   deletePredictionFromDb,
   deleteMarketPriceFromDb,
+  addMarketPriceToDb,
   createExpressSession,
   getCurrentDeviceId,
 } from './lib/dbService';
@@ -448,6 +449,11 @@ export default function App() {
   const handleDeleteMarketPrice = async (id: string) => {
     setMarkets((prev) => prev.filter((m) => m.id !== id));
     await deleteMarketPriceFromDb(id);
+  };
+
+  const handleAddMarketPrice = async (newMkt: MarketPrice) => {
+    setMarkets((prev) => [newMkt, ...prev]);
+    await addMarketPriceToDb(newMkt);
   };
 
   const handleSignOut = () => {
@@ -895,7 +901,14 @@ export default function App() {
               <ClimateSimulator activeFarm={activeFarm} />
             )}
             {activeTab === 'reports' && (
-              <NGOCommunityReports reports={reports} user={user} />
+              <NGOCommunityReports
+                reports={reports}
+                user={user}
+                onAddReport={handleAddReport}
+                onUpvoteReport={handleUpvoteReport}
+                onVerifyReport={handleVerifyReport}
+                onDeleteReport={handleDeleteReport}
+              />
             )}
             {activeTab === 'markets' && (
               <MarketTrends markets={markets} />
@@ -931,6 +944,7 @@ export default function App() {
               <UserManagement
                 user={user}
                 usersList={usersList}
+                onAddUser={handleAddUser}
                 onUpdateRole={handleUpdateUserRole}
                 onDeleteProfile={handleDeleteUser}
               />
@@ -947,7 +961,11 @@ export default function App() {
               <DatabaseMonitor />
             )}
             {activeTab === 'market_admin' && (
-              <MarketAdmin markets={markets} />
+              <MarketAdmin
+                markets={markets}
+                onDeleteMarketPrice={handleDeleteMarketPrice}
+                onAddMarketPrice={handleAddMarketPrice}
+              />
             )}
             {activeTab === 'settings' && (
               <AdminSettings

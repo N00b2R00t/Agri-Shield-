@@ -96,10 +96,10 @@ export const ExtensionDashboard: React.FC<ExtensionDashboardProps> = ({
         <h3 className="text-sm font-bold text-stone-200">Extension Command Workstations</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { id: 'farms', label: 'Regional Farmers', desc: 'County plot directory', tab: 'farms' },
+            { id: 'farms', label: 'Regional Farmers', desc: 'County plot directory', tab: 'regional_farms' },
             { id: 'broadcast', label: 'SMS & Push Dispatch', desc: 'Send emergency alerts', tab: 'broadcast' },
-            { id: 'advisory', label: 'Field Advisory', desc: 'Custom agronomist tips', tab: 'advisory' },
-            { id: 'radar', label: 'Outbreak Radar', desc: 'Vector spread tracking', tab: 'radar' },
+            { id: 'advisory', label: 'Field Advisory', desc: 'Custom agronomist tips', tab: 'field_advisory' },
+            { id: 'radar', label: 'Outbreak Radar', desc: 'Vector spread tracking', tab: 'outbreak_radar' },
             { id: 'simulations', label: 'Yield Simulator', desc: 'Drought scenario modeling', tab: 'simulations' },
             { id: 'settings', label: 'Officer Credentials', desc: 'County & sub-county setup', tab: 'settings' },
             { id: 'support', label: 'Ministry Support', desc: 'Field officer guidelines', tab: 'support' },

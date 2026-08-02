@@ -1,12 +1,12 @@
 import React from 'react';
-import { Farm, UserProfile, WeatherData } from '../../types';
+import { Farm, UserProfile, WeatherSummary } from '../../types';
 import { Sprout, Plus, MapPin, ShieldCheck, Sparkles, CheckCircle2, Calculator, Camera, HeartPulse } from 'lucide-react';
 
 interface MyFarmsProps {
   user: UserProfile;
   farms: Farm[];
   activeFarm?: Farm | null;
-  weather?: WeatherData | null;
+  weather?: WeatherSummary | null;
   onSelectFarm?: (farm: Farm) => void;
   onOpenNewFarm: () => void;
   onOpenLivestockModal?: () => void;

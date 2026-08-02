@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { Farm, WeatherData } from '../types';
+import { Farm, WeatherSummary } from '../types';
 import { X, Camera, Upload, Sparkles, AlertTriangle, CheckCircle2, ShieldCheck, RefreshCw, Sprout, Info, ArrowRight, HeartPulse } from 'lucide-react';
 
 interface AIDiagnosisModalProps {
   isOpen: boolean;
   onClose: () => void;
   activeFarm?: Farm | null;
-  weather?: WeatherData | null;
+  weather?: WeatherSummary | null;
   onAskFollowUp?: (question: string) => void;
 }
 

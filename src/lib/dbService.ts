@@ -457,6 +457,31 @@ export async function deleteMarketPriceFromDb(id: string): Promise<void> {
   }
 }
 
+export async function addMarketPriceToDb(mkt: MarketPrice): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await supabase.from('market_prices').insert({
+      id: mkt.id,
+      item_category: mkt.itemCategory || 'crop',
+      item_name: mkt.itemName || mkt.cropName,
+      crop_name: mkt.cropName || mkt.itemName,
+      market_name: mkt.marketName,
+      distance_km: mkt.distanceKm,
+      price_per_unit: mkt.pricePerUnit || mkt.pricePerKg,
+      unit: mkt.unit || 'Kg',
+      price_per_kg: mkt.pricePerKg || mkt.pricePerUnit,
+      currency: mkt.currency || 'USD',
+      price_change_percent: mkt.priceChangePercent,
+      trend: mkt.trend,
+      advice: mkt.advice,
+      region: mkt.region || 'Kenya',
+      last_updated: mkt.lastUpdated || 'Just now',
+    });
+  } catch (e) {
+    console.error('Error adding market price to Supabase:', e);
+  }
+}
+
 export async function deleteProfileFromDb(id: string): Promise<void> {
   if (!isSupabaseConfigured()) return;
   try {

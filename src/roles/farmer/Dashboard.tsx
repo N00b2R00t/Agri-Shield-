@@ -123,8 +123,8 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { id: 'farms', label: 'My Plots & Livestock', desc: 'Manage acreage & herds', tab: 'farms' },
-            { id: 'alerts', label: 'Risk Alerts', desc: 'Pest & flood warnings', tab: 'alerts' },
+            { id: 'farms', label: 'My Plots & Livestock', desc: 'Manage acreage & herds', tab: 'my_farms' },
+            { id: 'alerts', label: 'Risk Alerts', desc: 'Pest & flood warnings', tab: 'risk_alerts' },
             { id: 'advisory', label: 'Smart Advisory', desc: 'AI step-by-step guidance', tab: 'advisory' },
             { id: 'community', label: 'Community Intel', desc: 'Neighbor reports', tab: 'community' },
             { id: 'markets', label: 'Market Prices', desc: 'Grain & milk prices', tab: 'markets' },

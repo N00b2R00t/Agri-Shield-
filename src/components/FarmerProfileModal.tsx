@@ -20,6 +20,7 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
 }) => {
   const [farmName, setFarmName] = useState(activeFarm?.name || '');
   const [county, setCounty] = useState(activeFarm?.county || 'Uasin Gishu');
+  const [subCounty, setSubCounty] = useState(activeFarm?.locationName || 'Moiben Sub-County');
   const [category, setCategory] = useState<'crop' | 'livestock' | 'mixed'>(activeFarm?.category || 'mixed');
   const [cropType, setCropType] = useState<CropType>(activeFarm?.cropType || 'Maize');
   const [livestockType, setLivestockType] = useState<string>(activeFarm?.livestockType || 'Dairy Cattle');
@@ -38,6 +39,7 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
     onUpdateFarm({
       name: farmName,
       county,
+      locationName: subCounty,
       lat: countyObj ? countyObj.lat : (activeFarm?.lat ?? -0.5),
       lng: countyObj ? countyObj.lng : (activeFarm?.lng ?? 35.2),
       category,
@@ -103,7 +105,7 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
                   setCounty(newCounty);
                   const subList = getSubCountiesForCounty(newCounty);
                   if (subList.length > 0) {
-                    setLocationName(subList[0]);
+                    setSubCounty(subList[0]);
                   }
                 }}
                 className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 font-bold"
@@ -118,8 +120,8 @@ export const FarmerProfileModal: React.FC<FarmerProfileModalProps> = ({
             <div>
               <label className="block text-stone-700 font-bold mb-1">Sub-County / Constituency</label>
               <select
-                value={locationName}
-                onChange={(e) => setLocationName(e.target.value)}
+                value={subCounty}
+                onChange={(e) => setSubCounty(e.target.value)}
                 className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 font-bold"
               >
                 {getSubCountiesForCounty(county).map((sub) => (

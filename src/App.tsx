@@ -103,6 +103,8 @@ import { NewFarmModal } from './components/NewFarmModal';
 import { LivestockManagerModal } from './components/LivestockManagerModal';
 import { SettingsModal, ThemeMode } from './components/SettingsModal';
 import { DocumentationModal } from './components/DocumentationModal';
+import { SeedFertilizerCalculatorModal } from './components/SeedFertilizerCalculatorModal';
+import { AIDiagnosisModal } from './components/AIDiagnosisModal';
 import { LandingPage } from './components/LandingPage';
 
 import {
@@ -191,6 +193,8 @@ export default function App() {
   const [showLivestockModal, setShowLivestockModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showDocModal, setShowDocModal] = useState(false);
+  const [showCalculatorModal, setShowCalculatorModal] = useState(false);
+  const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('agrishield_theme');
     return (saved as ThemeMode) || 'system';
@@ -761,9 +765,12 @@ export default function App() {
                 user={user}
                 activeFarm={activeFarm}
                 farms={farms}
+                weather={weather}
                 onSelectFarm={setActiveFarm}
                 onOpenNewFarm={() => setShowNewFarmModal(true)}
                 onOpenLivestockModal={() => setShowLivestockModal(true)}
+                onOpenCalculatorModal={() => setShowCalculatorModal(true)}
+                onOpenDiagnosisModal={() => setShowDiagnosisModal(true)}
                 onOpenAssistantWithQuestion={(question, farm) => {
                   if (farm) setActiveFarm(farm);
                   setAssistantInitialQuestion(question || null);
@@ -1027,6 +1034,24 @@ export default function App() {
       <DocumentationModal
         isOpen={showDocModal}
         onClose={() => setShowDocModal(false)}
+      />
+
+      <SeedFertilizerCalculatorModal
+        isOpen={showCalculatorModal}
+        onClose={() => setShowCalculatorModal(false)}
+        farms={farms}
+        activeFarm={activeFarm}
+      />
+
+      <AIDiagnosisModal
+        isOpen={showDiagnosisModal}
+        onClose={() => setShowDiagnosisModal(false)}
+        activeFarm={activeFarm}
+        weather={weather}
+        onAskFollowUp={(question) => {
+          setAssistantInitialQuestion(question);
+          setShowAssistant(true);
+        }}
       />
 
       {/* Footer */}

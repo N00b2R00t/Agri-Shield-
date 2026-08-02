@@ -1,14 +1,17 @@
 import React from 'react';
-import { Farm, UserProfile } from '../../types';
-import { Sprout, Plus, MapPin, Layers, Droplets, Calendar, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Farm, UserProfile, WeatherData } from '../../types';
+import { Sprout, Plus, MapPin, ShieldCheck, Sparkles, CheckCircle2, Calculator, Camera, HeartPulse } from 'lucide-react';
 
 interface MyFarmsProps {
   user: UserProfile;
   farms: Farm[];
   activeFarm?: Farm | null;
+  weather?: WeatherData | null;
   onSelectFarm?: (farm: Farm) => void;
   onOpenNewFarm: () => void;
   onOpenLivestockModal?: () => void;
+  onOpenCalculatorModal?: () => void;
+  onOpenDiagnosisModal?: () => void;
   onOpenAssistantWithQuestion?: (question?: string, farm?: Farm) => void;
 }
 
@@ -16,35 +19,59 @@ export const MyFarms: React.FC<MyFarmsProps> = ({
   user,
   farms,
   activeFarm,
+  weather,
   onSelectFarm,
   onOpenNewFarm,
   onOpenLivestockModal,
+  onOpenCalculatorModal,
+  onOpenDiagnosisModal,
   onOpenAssistantWithQuestion,
 }) => {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-stone-900 border border-stone-800 p-5 rounded-3xl">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-stone-900 border border-stone-800 p-5 rounded-3xl">
         <div className="space-y-1">
           <div className="inline-flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
             <Sprout className="w-4 h-4" />
             <span>Farmer Plot & Herd Directory</span>
           </div>
           <h2 className="text-xl font-bold text-white">Registered Plots for {user.name}</h2>
-          <p className="text-xs text-stone-400">Manage crop types, soil conditions, irrigation, and livestock herds in {user.county}.</p>
+          <p className="text-xs text-stone-400">Manage crop types, soil conditions, seed & fertilizer estimates, and plant/livestock photo diagnosis in {user.county}.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {onOpenCalculatorModal && (
+            <button
+              onClick={onOpenCalculatorModal}
+              className="px-3.5 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-750 text-stone-200 font-bold text-xs flex items-center space-x-1.5 border border-stone-700 shadow-md transition-colors"
+            >
+              <Calculator className="w-4 h-4 text-emerald-400" />
+              <span>Seed & Fertilizer Calculator</span>
+            </button>
+          )}
+
+          {onOpenDiagnosisModal && (
+            <button
+              onClick={onOpenDiagnosisModal}
+              className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-stone-950 font-black text-xs flex items-center space-x-1.5 shadow-md transition-transform active:scale-95"
+            >
+              <HeartPulse className="w-4 h-4 text-stone-950" />
+              <span>AI Photo Health Scanner</span>
+            </button>
+          )}
+
           {onOpenLivestockModal && (
             <button
               onClick={onOpenLivestockModal}
-              className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md"
+              className="px-3 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md"
             >
               <span>Manage Livestock Herd</span>
             </button>
           )}
+
           <button
             onClick={onOpenNewFarm}
-            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md"
+            className="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md"
           >
             <Plus className="w-4 h-4" />
             <span>Add New Farm</span>
@@ -125,6 +152,35 @@ export const MyFarms: React.FC<MyFarmsProps> = ({
                     <ShieldCheck className="w-5 h-5 text-amber-400" />
                   </div>
                 )}
+
+                {/* Quick Plot Tools */}
+                <div className="flex items-center gap-2 text-xs pt-1">
+                  {onOpenCalculatorModal && (
+                    <button
+                      onClick={() => {
+                        if (onSelectFarm) onSelectFarm(farm);
+                        onOpenCalculatorModal();
+                      }}
+                      className="flex-1 px-3 py-2 rounded-xl bg-stone-950 hover:bg-stone-800 text-stone-300 font-bold text-[11px] border border-stone-800 flex items-center justify-center space-x-1 transition-colors"
+                    >
+                      <Calculator className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Seed & Fert Calculator</span>
+                    </button>
+                  )}
+
+                  {onOpenDiagnosisModal && (
+                    <button
+                      onClick={() => {
+                        if (onSelectFarm) onSelectFarm(farm);
+                        onOpenDiagnosisModal();
+                      }}
+                      className="flex-1 px-3 py-2 rounded-xl bg-stone-950 hover:bg-stone-800 text-stone-300 font-bold text-[11px] border border-stone-800 flex items-center justify-center space-x-1 transition-colors"
+                    >
+                      <Camera className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Photo AI Health Check</span>
+                    </button>
+                  )}
+                </div>
 
                 {/* AI Farm Analysis & Advice Trigger Bar */}
                 <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-stone-800/80">

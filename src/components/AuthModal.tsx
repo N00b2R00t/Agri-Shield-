@@ -121,6 +121,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const dbProfiles = await getProfilesFromDb();
       const dbProfile = dbProfiles.find((p) => p.email.toLowerCase() === emailClean.toLowerCase());
 
+      if (dbProfile && dbProfile.status === 'suspended') {
+        setErrorMsg('This account has been suspended by an administrator. Access restricted.');
+        setLoading(false);
+        return;
+      }
+
       const activeRole: UserRole = dbProfile
         ? dbProfile.role
         : ((data.user.user_metadata?.role as UserRole) || 'farmer');
@@ -131,6 +137,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         email: emailClean,
         phone: dbProfile?.phone || data.user.user_metadata?.phone || '0143791311',
         role: activeRole,
+        status: dbProfile?.status || 'active',
         country: 'Kenya',
         county: dbProfile?.county || data.user.user_metadata?.county || 'Uasin Gishu',
         organization: dbProfile?.organization || sanitizeInput(data.user.user_metadata?.organization || ''),
@@ -145,12 +152,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const dbProfiles = await getProfilesFromDb();
       const dbProfile = dbProfiles.find((p) => p.email.toLowerCase() === emailClean.toLowerCase());
 
+      if (dbProfile && dbProfile.status === 'suspended') {
+        setErrorMsg('This account has been suspended by an administrator. Access restricted.');
+        setLoading(false);
+        return;
+      }
+
       const fallbackUser: UserProfile = {
         id: dbProfile?.id || `usr-${Date.now()}`,
         name: dbProfile?.name || (emailClean || '').split('@')[0],
         email: emailClean,
         phone: dbProfile?.phone || '0143791311',
         role: dbProfile ? dbProfile.role : 'farmer',
+        status: dbProfile?.status || 'active',
         country: 'Kenya',
         county: dbProfile?.county || 'Uasin Gishu',
         organization: dbProfile?.organization || 'Smallholder Farmer',

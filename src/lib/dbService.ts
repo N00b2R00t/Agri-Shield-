@@ -359,16 +359,36 @@ export async function addNotificationToDb(notif: AlertNotification): Promise<voi
 
 // User Profile Operations for Admin and Auth
 export async function getProfilesFromDb(): Promise<UserProfile[]> {
-  if (!isSupabaseConfigured()) return INITIAL_USERS;
+  const getLocalProfiles = (): UserProfile[] => {
+    try {
+      const saved = localStorage.getItem('agrishield_users_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 0) return parsed;
+      }
+    } catch (e) {
+      console.warn('Error reading agrishield_users_list from localStorage:', e);
+    }
+    localStorage.setItem('agrishield_users_list', JSON.stringify(INITIAL_USERS));
+    return INITIAL_USERS;
+  };
+
+  if (!isSupabaseConfigured()) {
+    return getLocalProfiles();
+  }
+
   try {
     const { data, error } = await supabase.from('profiles').select('*');
-    if (error || !data || data.length === 0) return INITIAL_USERS;
-    return data.map((row: any) => ({
+    if (error || !data || data.length === 0) {
+      return getLocalProfiles();
+    }
+    const profiles: UserProfile[] = data.map((row: any) => ({
       id: row.id,
       name: row.name,
       email: row.email,
       phone: row.phone || '0143791311',
       role: row.role || 'farmer',
+      status: (row.status || 'active') as 'active' | 'suspended',
       country: row.country || 'Kenya',
       county: row.county || 'Uasin Gishu',
       subCounty: row.sub_county || 'Moiben Sub-County',
@@ -380,13 +400,32 @@ export async function getProfilesFromDb(): Promise<UserProfile[]> {
       password: row.password_hash,
       deviceId: row.valid_device_id,
     }));
+    
+    localStorage.setItem('agrishield_users_list', JSON.stringify(profiles));
+    return profiles;
   } catch (e) {
     console.error('Error fetching profiles from Supabase:', e);
-    return INITIAL_USERS;
+    return getLocalProfiles();
   }
 }
 
 export async function saveProfileToDb(user: UserProfile): Promise<void> {
+  // 1. Sync local cache in localStorage
+  try {
+    const saved = localStorage.getItem('agrishield_users_list');
+    let list: UserProfile[] = saved ? JSON.parse(saved) : INITIAL_USERS;
+    if (!Array.isArray(list)) list = INITIAL_USERS;
+    const existsIndex = list.findIndex((u) => u.id === user.id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase()));
+    if (existsIndex >= 0) {
+      list[existsIndex] = { ...list[existsIndex], ...user };
+    } else {
+      list.unshift(user);
+    }
+    localStorage.setItem('agrishield_users_list', JSON.stringify(list));
+  } catch (e) {
+    console.warn('Error syncing profile to localStorage cache:', e);
+  }
+
   if (!isSupabaseConfigured()) return;
   try {
     await supabase.from('profiles').upsert({
@@ -395,6 +434,7 @@ export async function saveProfileToDb(user: UserProfile): Promise<void> {
       email: user.email,
       phone: user.phone,
       role: user.role,
+      status: user.status || 'active',
       country: user.country || 'Kenya',
       county: user.county || 'Uasin Gishu',
       sub_county: user.subCounty || 'Moiben Sub-County',
@@ -505,6 +545,19 @@ export async function addMarketPriceToDb(mkt: MarketPrice): Promise<void> {
 }
 
 export async function deleteProfileFromDb(id: string): Promise<void> {
+  try {
+    const saved = localStorage.getItem('agrishield_users_list');
+    if (saved) {
+      const list: UserProfile[] = JSON.parse(saved);
+      if (Array.isArray(list)) {
+        const filtered = list.filter((u) => u.id !== id && u.email !== id);
+        localStorage.setItem('agrishield_users_list', JSON.stringify(filtered));
+      }
+    }
+  } catch (e) {
+    console.warn('Error removing profile from localStorage cache:', e);
+  }
+
   if (!isSupabaseConfigured()) return;
   try {
     await supabase.from('profiles').delete().eq('id', id);

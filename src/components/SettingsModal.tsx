@@ -33,7 +33,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { KENYA_COUNTIES, getSubCountiesForCounty } from '../data/kenyaCounties';
-import { updateUserPasswordInDb } from '../lib/dbService';
+import { updateUserPasswordInDb, saveProfileToDb } from '../lib/dbService';
 
 export type ThemeMode = 'dark' | 'light' | 'system';
 
@@ -187,8 +187,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   // Admin User Role Update
   const handleRoleChange = (userId: string, newRole: UserRole) => {
     if (onUpdateUsersList && usersList.length > 0) {
+      const targetUser = usersList.find((u) => u.id === userId);
       const updatedList = usersList.map((u) => (u.id === userId ? { ...u, role: newRole } : u));
       onUpdateUsersList(updatedList);
+      if (targetUser) {
+        saveProfileToDb({ ...targetUser, role: newRole });
+      }
     }
     if (userId === user.id && onUpdateUser) {
       onUpdateUser({ role: newRole });

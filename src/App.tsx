@@ -152,7 +152,25 @@ export default function App() {
     }
     return INITIAL_USER;
   });
-  const [usersList, setUsersList] = useState<UserProfile[]>(INITIAL_USERS);
+  const [usersList, setUsersList] = useState<UserProfile[]>(() => {
+    const saved = localStorage.getItem('agrishield_users_list');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 0) return parsed;
+      } catch {
+        // Fallback
+      }
+    }
+    return INITIAL_USERS;
+  });
+
+  // Keep usersList persisted in localStorage
+  useEffect(() => {
+    if (usersList && usersList.length >= 0) {
+      localStorage.setItem('agrishield_users_list', JSON.stringify(usersList));
+    }
+  }, [usersList]);
   const [farms, setFarms] = useState<Farm[]>(() => {
     const saved = localStorage.getItem('agrishield_user_farms');
     if (saved) {
@@ -442,7 +460,11 @@ export default function App() {
   };
 
   const handleDeleteUser = async (id: string) => {
-    setUsersList((prev) => prev.filter((u) => u.id !== id));
+    setUsersList((prev) => {
+      const updated = prev.filter((u) => u.id !== id);
+      localStorage.setItem('agrishield_users_list', JSON.stringify(updated));
+      return updated;
+    });
     await deleteProfileFromDb(id);
   };
 
@@ -601,23 +623,31 @@ export default function App() {
   };
 
   // Moderation & Suspension Handlers
-  const handleToggleUserSuspend = (userId: string) => {
-    setUsersList((prev) =>
-      prev.map((u) => {
+  const handleToggleUserSuspend = async (userId: string) => {
+    let updatedTargetUser: UserProfile | null = null;
+    setUsersList((prev) => {
+      const updated = prev.map((u) => {
         if (u.id === userId) {
           const nextStatus = u.status === 'suspended' ? 'active' : 'suspended';
-          const updated = { ...u, status: nextStatus as 'active' | 'suspended' };
-          saveProfileToDb(updated);
-          return updated;
+          updatedTargetUser = { ...u, status: nextStatus as 'active' | 'suspended' };
+          return updatedTargetUser;
         }
         return u;
-      })
-    );
-    if (user.id === userId) {
-      const nextStatus = user.status === 'suspended' ? 'active' : 'suspended';
-      const updated = { ...user, status: nextStatus as 'active' | 'suspended' };
-      setUser(updated);
-      localStorage.setItem('agrishield_session_user', JSON.stringify(updated));
+      });
+      localStorage.setItem('agrishield_users_list', JSON.stringify(updated));
+      return updated;
+    });
+
+    if (updatedTargetUser) {
+      await saveProfileToDb(updatedTargetUser);
+      const target = updatedTargetUser as UserProfile;
+      if (
+        user.id === userId ||
+        (Boolean(target.email) && Boolean(user.email) && target.email.toLowerCase() === user.email.toLowerCase())
+      ) {
+        setUser(target);
+        localStorage.setItem('agrishield_session_user', JSON.stringify(target));
+      }
     }
   };
 
